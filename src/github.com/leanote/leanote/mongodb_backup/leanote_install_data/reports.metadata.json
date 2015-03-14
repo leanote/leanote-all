@@ -1,1 +1,0 @@
-{ "indexes" : [ { "v" : 1, "key" : { "_id" : 1 }, "ns" : "leanote_beta2.reports", "name" : "_id_" } ] }
