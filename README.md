@@ -58,7 +58,7 @@ go version go1.3.1 linux/amd64
 1. src复制到gopackage下 (/home/user1/gopackage/下)
 2. 生成revel命令
 ```
-$> go get github.com/revel/cmd/revel
+$> go install github.com/revel/cmd/revel
 ``` 
 
 ## 安装mongodb
