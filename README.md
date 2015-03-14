@@ -1,6 +1,6 @@
 # leanote-all
 
-该仓库包含leanote依赖及leanote最新源码, 特为需要源码安装的朋友准备
+该仓库包含leanote依赖及leanote最新源码, 特为需要源码安装的朋友准备.
 
 ## 安装步骤
 
@@ -9,6 +9,8 @@
 3. 安装mongodb
 4. 导入初始数据
 5. 使用revel运行leanote
+
+以下步骤适合mac, linux朋友. windows朋友请随机应变(安装go, mongodb, 配置环境变量有区别).
 
 ## 安装golang
 
