@@ -311,6 +311,8 @@ func (loader *TemplateLoader) Refresh() *Error {
 								}
 							}
 						}()
+						// Admin/Blog/list.html______________
+						TRACE.Println(templateName + "______________")
 						templateSet = template.New(templateName).Funcs(TemplateFuncs)
 						// If alternate delimiters set for the project, change them for this set
 						if splitDelims != nil && basePath == ViewsPath {
