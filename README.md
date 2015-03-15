@@ -53,7 +53,7 @@ go version go1.3.1 linux/amd64
 
 ## 下载该仓库
 
-该仓库包含leanote所有依赖包和leanote最新源码
+该仓库包含leanote所有依赖包和leanote最新源码. 如果下载比较慢, 可至: http://pan.baidu.com/s/1eQiuCl8 下载
 
 1. src复制到gopackage下 (/home/user1/gopackage/下)
 2. 生成revel命令
