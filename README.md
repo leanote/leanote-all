@@ -148,7 +148,7 @@ users
 初始数据users表中已有2个用户:
 ```
 user1 username: admin, password: abc123 (管理员, 只有该用户可以管理后台)
-user2 username: demo@leanote.com, password: demo@leanote.com (仅共体验使用)
+user2 username: demo@leanote.com, password: demo@leanote.com (仅供体验使用)
 ```
 
 ## 配置leanote

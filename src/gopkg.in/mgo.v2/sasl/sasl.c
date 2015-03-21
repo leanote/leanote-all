@@ -1,7 +1,9 @@
-#include <sasl/sasl.h>
+// +build !windows
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sasl/sasl.h>
 
 static int mgo_sasl_simple(void *context, int id, const char **result, unsigned int *len)
 {
@@ -10,10 +12,10 @@ static int mgo_sasl_simple(void *context, int id, const char **result, unsigned 
 	}
 	switch (id) {
 	case SASL_CB_USER:
-		*result = (char *) context;
+		*result = (char *)context;
 		break;
 	case SASL_CB_AUTHNAME:
-		*result = (char *) context;
+		*result = (char *)context;
 		break;
 	case SASL_CB_LANGUAGE:
 		*result = NULL;

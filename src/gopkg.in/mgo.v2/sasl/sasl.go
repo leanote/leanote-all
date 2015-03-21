@@ -2,6 +2,9 @@
 //
 // This package is not meant to be used by itself.
 //
+
+// +build !windows
+
 package sasl
 
 // #cgo LDFLAGS: -lsasl2

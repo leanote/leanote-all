@@ -43,6 +43,7 @@ import (
 var (
 	typeBinary         = reflect.TypeOf(Binary{})
 	typeObjectId       = reflect.TypeOf(ObjectId(""))
+	typeDBPointer      = reflect.TypeOf(DBPointer{"", ObjectId("")})
 	typeSymbol         = reflect.TypeOf(Symbol(""))
 	typeMongoTimestamp = reflect.TypeOf(MongoTimestamp(0))
 	typeOrderKey       = reflect.TypeOf(MinKey)
@@ -179,10 +180,14 @@ func isZero(v reflect.Value) bool {
 	case reflect.Bool:
 		return !v.Bool()
 	case reflect.Struct:
-		if v.Type() == typeTime {
+		vt := v.Type()
+		if vt == typeTime {
 			return v.Interface().(time.Time).IsZero()
 		}
-		for i := v.NumField()-1; i >= 0; i-- {
+		for i := 0; i < v.NumField(); i++ {
+			if vt.Field(i).PkgPath != "" {
+				continue // Private field
+			}
 			if !isZero(v.Field(i)) {
 				return false
 			}
@@ -380,6 +385,15 @@ func (e *encoder) addElem(name string, v reflect.Value, minSize bool) {
 		case Binary:
 			e.addElemName('\x05', name)
 			e.addBinary(s.Kind, s.Data)
+
+		case DBPointer:
+			e.addElemName('\x0C', name)
+			e.addStr(s.Namespace)
+			if len(s.Id) != 12 {
+				panic("ObjectIDs must be exactly 12 bytes long (got " +
+					strconv.Itoa(len(s.Id)) + ")")
+			}
+			e.addBytes([]byte(s.Id)...)
 
 		case RegEx:
 			e.addElemName('\x0B', name)

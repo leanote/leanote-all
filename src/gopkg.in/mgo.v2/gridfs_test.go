@@ -31,9 +31,9 @@ import (
 	"os"
 	"time"
 
+	. "gopkg.in/check.v1"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	. "gopkg.in/check.v1"
 )
 
 func (s *S) TestGridFSCreate(c *C) {
@@ -76,7 +76,7 @@ func (s *S) TestGridFSCreate(c *C) {
 	expected := M{
 		"_id":        "<id>",
 		"length":     9,
-		"chunkSize":  262144,
+		"chunkSize":  255 * 1024,
 		"uploadDate": "<timestamp>",
 		"md5":        "1e50210a0202497fb79bc38b6ade6c34",
 	}
@@ -173,7 +173,7 @@ func (s *S) TestGridFSFileDetails(c *C) {
 	expected := M{
 		"_id":         "myid",
 		"length":      9,
-		"chunkSize":   262144,
+		"chunkSize":   255 * 1024,
 		"uploadDate":  "<timestamp>",
 		"md5":         "1e50210a0202497fb79bc38b6ade6c34",
 		"filename":    "myfile2.txt",
@@ -181,6 +181,34 @@ func (s *S) TestGridFSFileDetails(c *C) {
 		"metadata":    M{"any": "thing"},
 	}
 	c.Assert(result, DeepEquals, expected)
+}
+
+func (s *S) TestGridFSSetUploadDate(c *C) {
+	session, err := mgo.Dial("localhost:40011")
+	c.Assert(err, IsNil)
+	defer session.Close()
+
+	db := session.DB("mydb")
+
+	gfs := db.GridFS("fs")
+	file, err := gfs.Create("")
+	c.Assert(err, IsNil)
+
+	t := time.Date(2014, 1, 1, 1, 1, 1, 0, time.Local)
+	file.SetUploadDate(t)
+
+	err = file.Close()
+	c.Assert(err, IsNil)
+
+	// Check the file information.
+	result := M{}
+	err = db.C("fs.files").Find(nil).One(result)
+	c.Assert(err, IsNil)
+
+	ud := result["uploadDate"].(time.Time)
+	if !ud.Equal(t) {
+		c.Fatalf("want upload date %s, got %s", t, ud)
+	}
 }
 
 func (s *S) TestGridFSCreateWithChunking(c *C) {
@@ -297,6 +325,34 @@ func (s *S) TestGridFSAbort(c *C) {
 	c.Assert(err, ErrorMatches, "write aborted")
 
 	count, err = db.C("fs.chunks").Count()
+	c.Assert(err, IsNil)
+	c.Assert(count, Equals, 0)
+}
+
+func (s *S) TestGridFSCloseConflict(c *C) {
+	session, err := mgo.Dial("localhost:40011")
+	c.Assert(err, IsNil)
+	defer session.Close()
+
+	db := session.DB("mydb")
+
+	db.C("fs.files").EnsureIndex(mgo.Index{Key: []string{"filename"}, Unique: true})
+
+	// For a closing-time conflict
+	err = db.C("fs.files").Insert(M{"filename": "foo.txt"})
+	c.Assert(err, IsNil)
+
+	gfs := db.GridFS("fs")
+	file, err := gfs.Create("foo.txt")
+	c.Assert(err, IsNil)
+
+	_, err = file.Write([]byte("some data"))
+	c.Assert(err, IsNil)
+
+	err = file.Close()
+	c.Assert(mgo.IsDup(err), Equals, true)
+
+	count, err := db.C("fs.chunks").Count()
 	c.Assert(err, IsNil)
 	c.Assert(count, Equals, 0)
 }
@@ -484,6 +540,13 @@ func (s *S) TestGridFSSeek(c *C) {
 	_, err = file.Read(b)
 	c.Assert(err, IsNil)
 	c.Assert(b, DeepEquals, []byte("nopqr"))
+
+	o, err = file.Seek(0, os.SEEK_END)
+	c.Assert(err, IsNil)
+	c.Assert(o, Equals, int64(22))
+	n, err = file.Read(b)
+	c.Assert(err, Equals, io.EOF)
+	c.Assert(n, Equals, 0)
 
 	o, err = file.Seek(-10, os.SEEK_END)
 	c.Assert(err, IsNil)

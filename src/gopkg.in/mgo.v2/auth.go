@@ -28,12 +28,14 @@ package mgo
 
 import (
 	"crypto/md5"
+	"crypto/sha1"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
 
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2/internal/scram"
 )
 
 type authCmd struct {
@@ -158,6 +160,9 @@ func (socket *mongoSocket) resetNonce() {
 
 func (socket *mongoSocket) Login(cred Credential) error {
 	socket.Lock()
+	if cred.Mechanism == "" && socket.serverInfo.MaxWireVersion >= 3 {
+		cred.Mechanism = "SCRAM-SHA-1"
+	}
 	for _, sockCred := range socket.creds {
 		if sockCred == cred {
 			debugf("Socket %p to %s: login: db=%q user=%q (already logged in)", socket, socket.addr, cred.Source, cred.Username)
@@ -177,12 +182,12 @@ func (socket *mongoSocket) Login(cred Credential) error {
 
 	var err error
 	switch cred.Mechanism {
-	case "", "MONGO-CR":
+	case "", "MONGODB-CR", "MONGO-CR": // Name changed to MONGODB-CR in SERVER-8501.
 		err = socket.loginClassic(cred)
 	case "PLAIN":
 		err = socket.loginPlain(cred)
-	case "MONGO-X509":
-		err = fmt.Errorf("unsupported authentication mechanism: %s", cred.Mechanism)
+	case "MONGODB-X509":
+		err = socket.loginX509(cred)
 	default:
 		// Try SASL for everything else, if it is available.
 		err = socket.loginSASL(cred)
@@ -230,6 +235,27 @@ func (socket *mongoSocket) loginClassic(cred Credential) error {
 	})
 }
 
+type authX509Cmd struct {
+	Authenticate int
+	User         string
+	Mechanism    string
+}
+
+func (socket *mongoSocket) loginX509(cred Credential) error {
+	cmd := authX509Cmd{Authenticate: 1, User: cred.Username, Mechanism: "MONGODB-X509"}
+	res := authResult{}
+	return socket.loginRun(cred.Source, &cmd, &res, func() error {
+		if !res.Ok {
+			return errors.New(res.ErrMsg)
+		}
+		socket.Lock()
+		socket.dropAuth(cred.Source)
+		socket.creds = append(socket.creds, cred)
+		socket.Unlock()
+		return nil
+	})
+}
+
 func (socket *mongoSocket) loginPlain(cred Credential) error {
 	cmd := saslCmd{Start: 1, Mechanism: "PLAIN", Payload: []byte("\x00" + cred.Username + "\x00" + cred.Password)}
 	res := authResult{}
@@ -246,7 +272,16 @@ func (socket *mongoSocket) loginPlain(cred Credential) error {
 }
 
 func (socket *mongoSocket) loginSASL(cred Credential) error {
-	sasl, err := saslNew(cred, socket.Server().Addr)
+	var sasl saslStepper
+	var err error
+	if cred.Mechanism == "SCRAM-SHA-1" {
+		// SCRAM is handled without external libraries.
+		sasl = saslNewScram(cred)
+	} else if len(cred.ServiceHost) > 0 {
+		sasl, err = saslNew(cred, cred.ServiceHost)
+	} else {
+		sasl, err = saslNew(cred, socket.Server().Addr)
+	}
 	if err != nil {
 		return err
 	}
@@ -316,6 +351,25 @@ func (socket *mongoSocket) loginSASL(cred Credential) error {
 	}
 
 	return nil
+}
+
+func saslNewScram(cred Credential) *saslScram {
+	credsum := md5.New()
+	credsum.Write([]byte(cred.Username + ":mongo:" + cred.Password))
+	client := scram.NewClient(sha1.New, cred.Username, hex.EncodeToString(credsum.Sum(nil)))
+	return &saslScram{cred: cred, client: client}
+}
+
+type saslScram struct {
+	cred   Credential
+	client *scram.Client
+}
+
+func (s *saslScram) Close() {}
+
+func (s *saslScram) Step(serverData []byte) (clientData []byte, done bool, err error) {
+	more := s.client.Step(serverData)
+	return s.client.Out(), !more, s.client.Err()
 }
 
 func (socket *mongoSocket) loginRun(db string, query, result interface{}, f func() error) error {

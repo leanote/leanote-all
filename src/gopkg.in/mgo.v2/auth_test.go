@@ -27,9 +27,14 @@
 package mgo_test
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net"
 	"net/url"
+	"os"
+	"runtime"
 	"sync"
 	"time"
 
@@ -51,7 +56,7 @@ func (s *S) TestAuthLoginDatabase(c *C) {
 		admindb := session.DB("admin")
 
 		err = admindb.Login("root", "wrong")
-		c.Assert(err, ErrorMatches, "auth fail(s|ed)")
+		c.Assert(err, ErrorMatches, "auth fail(s|ed)|.*Authentication failed.")
 
 		err = admindb.Login("root", "rapadura")
 		c.Assert(err, IsNil)
@@ -77,7 +82,7 @@ func (s *S) TestAuthLoginSession(c *C) {
 			Password: "wrong",
 		}
 		err = session.Login(&cred)
-		c.Assert(err, ErrorMatches, "auth fail(s|ed)")
+		c.Assert(err, ErrorMatches, "auth fail(s|ed)|.*Authentication failed.")
 
 		cred.Password = "rapadura"
 
@@ -158,7 +163,7 @@ func (s *S) TestAuthUpsertUserErrors(c *C) {
 	c.Assert(err, ErrorMatches, "user has both Password/PasswordHash and UserSource set")
 
 	err = mydb.UpsertUser(&mgo.User{Username: "user", Password: "pass", OtherDBRoles: map[string][]mgo.Role{"db": nil}})
-	c.Assert(err, ErrorMatches, "user with OtherDBRoles is only supported in admin database")
+	c.Assert(err, ErrorMatches, "user with OtherDBRoles is only supported in the admin or \\$external databases")
 }
 
 func (s *S) TestAuthUpsertUser(c *C) {
@@ -239,7 +244,7 @@ func (s *S) TestAuthUpsertUser(c *C) {
 
 	// Can't login directly into the database using UserSource, though.
 	err = myotherdb.Login("myrwuser", "mypass")
-	c.Assert(err, ErrorMatches, "auth fail(s|ed)")
+	c.Assert(err, ErrorMatches, "auth fail(s|ed)|.*Authentication failed.")
 }
 
 func (s *S) TestAuthUpsertUserOtherDBRoles(c *C) {
@@ -384,7 +389,7 @@ func (s *S) TestAuthAddUserReplaces(c *C) {
 	admindb.Logout()
 
 	err = mydb.Login("myuser", "myoldpass")
-	c.Assert(err, ErrorMatches, "auth fail(s|ed)")
+	c.Assert(err, ErrorMatches, "auth fail(s|ed)|.*Authentication failed.")
 	err = mydb.Login("myuser", "mynewpass")
 	c.Assert(err, IsNil)
 
@@ -411,7 +416,7 @@ func (s *S) TestAuthRemoveUser(c *C) {
 	c.Assert(err, Equals, mgo.ErrNotFound)
 
 	err = mydb.Login("myuser", "mypass")
-	c.Assert(err, ErrorMatches, "auth fail(s|ed)")
+	c.Assert(err, ErrorMatches, "auth fail(s|ed)|.*Authentication failed.")
 }
 
 func (s *S) TestAuthLoginTwiceDoesNothing(c *C) {
@@ -729,7 +734,7 @@ func (s *S) TestAuthURLWrongCredentials(c *C) {
 	if session != nil {
 		session.Close()
 	}
-	c.Assert(err, ErrorMatches, "auth fail(s|ed)")
+	c.Assert(err, ErrorMatches, "auth fail(s|ed)|.*Authentication failed.")
 	c.Assert(session, IsNil)
 }
 
@@ -840,6 +845,124 @@ func (s *S) TestAuthDirectWithLogin(c *C) {
 	}
 }
 
+func (s *S) TestAuthScramSha1Cred(c *C) {
+	if !s.versionAtLeast(2, 7, 7) {
+		c.Skip("SCRAM-SHA-1 tests depend on 2.7.7")
+	}
+	cred := &mgo.Credential{
+		Username:  "root",
+		Password:  "rapadura",
+		Mechanism: "SCRAM-SHA-1",
+		Source:    "admin",
+	}
+	host := "localhost:40002"
+	c.Logf("Connecting to %s...", host)
+	session, err := mgo.Dial(host)
+	c.Assert(err, IsNil)
+	defer session.Close()
+
+	mycoll := session.DB("admin").C("mycoll")
+
+	c.Logf("Connected! Testing the need for authentication...")
+	err = mycoll.Find(nil).One(nil)
+	c.Assert(err, ErrorMatches, "unauthorized|not authorized .*")
+
+	c.Logf("Authenticating...")
+	err = session.Login(cred)
+	c.Assert(err, IsNil)
+	c.Logf("Authenticated!")
+
+	c.Logf("Connected! Testing the need for authentication...")
+	err = mycoll.Find(nil).One(nil)
+	c.Assert(err, Equals, mgo.ErrNotFound)
+}
+
+func (s *S) TestAuthScramSha1URL(c *C) {
+	if !s.versionAtLeast(2, 7, 7) {
+		c.Skip("SCRAM-SHA-1 tests depend on 2.7.7")
+	}
+	host := "localhost:40002"
+	c.Logf("Connecting to %s...", host)
+	session, err := mgo.Dial(fmt.Sprintf("root:rapadura@%s?authMechanism=SCRAM-SHA-1", host))
+	c.Assert(err, IsNil)
+	defer session.Close()
+
+	mycoll := session.DB("admin").C("mycoll")
+
+	c.Logf("Connected! Testing the need for authentication...")
+	err = mycoll.Find(nil).One(nil)
+	c.Assert(err, Equals, mgo.ErrNotFound)
+}
+
+func (s *S) TestAuthX509Cred(c *C) {
+	session, err := mgo.Dial("localhost:40001")
+	c.Assert(err, IsNil)
+	defer session.Close()
+	binfo, err := session.BuildInfo()
+	c.Assert(err, IsNil)
+	if binfo.OpenSSLVersion == "" {
+		c.Skip("server does not support SSL")
+	}
+
+	clientCertPEM, err := ioutil.ReadFile("testdb/client.pem")
+	c.Assert(err, IsNil)
+
+	clientCert, err := tls.X509KeyPair(clientCertPEM, clientCertPEM)
+	c.Assert(err, IsNil)
+
+	tlsConfig := &tls.Config{
+		// Isolating tests to client certs, don't care about server validation.
+		InsecureSkipVerify: true,
+		Certificates:       []tls.Certificate{clientCert},
+	}
+
+	var host = "localhost:40003"
+	c.Logf("Connecting to %s...", host)
+	session, err = mgo.DialWithInfo(&mgo.DialInfo{
+		Addrs: []string{host},
+		DialServer: func(addr *mgo.ServerAddr) (net.Conn, error) {
+			return tls.Dial("tcp", addr.String(), tlsConfig)
+		},
+	})
+	c.Assert(err, IsNil)
+	defer session.Close()
+
+	err = session.Login(&mgo.Credential{Username: "root", Password: "rapadura"})
+	c.Assert(err, IsNil)
+
+	// This needs to be kept in sync with client.pem
+	x509Subject := "CN=localhost,OU=Client,O=MGO,L=MGO,ST=MGO,C=GO"
+
+	externalDB := session.DB("$external")
+	var x509User mgo.User = mgo.User{
+		Username:     x509Subject,
+		OtherDBRoles: map[string][]mgo.Role{"admin": []mgo.Role{mgo.RoleRoot}},
+	}
+	err = externalDB.UpsertUser(&x509User)
+	c.Assert(err, IsNil)
+
+	session.LogoutAll()
+
+	c.Logf("Connected! Ensuring authentication is required...")
+	names, err := session.DatabaseNames()
+	c.Assert(err, ErrorMatches, "not authorized .*")
+
+	cred := &mgo.Credential{
+		Username:  x509Subject,
+		Mechanism: "MONGODB-X509",
+		Source:    "$external",
+	}
+
+	c.Logf("Authenticating...")
+	err = session.Login(cred)
+	c.Assert(err, IsNil)
+	c.Logf("Authenticated!")
+
+	names, err = session.DatabaseNames()
+	c.Assert(err, IsNil)
+	c.Assert(len(names) > 0, Equals, true)
+}
+
 var (
 	plainFlag = flag.String("plain", "", "Host to test PLAIN authentication against (depends on custom environment)")
 	plainUser = "einstein"
@@ -893,11 +1016,38 @@ func (s *S) TestAuthPlainURL(c *C) {
 
 var (
 	kerberosFlag = flag.Bool("kerberos", false, "Test Kerberos authentication (depends on custom environment)")
-	kerberosHost = "mmscustmongo.10gen.me"
-	kerberosUser = "mmsagent/mmscustagent.10gen.me@10GEN.ME"
+	kerberosHost = "ldaptest.10gen.cc"
+	kerberosUser = "drivers@LDAPTEST.10GEN.CC"
+
+	winKerberosPasswordEnv = "MGO_KERBEROS_PASSWORD"
 )
 
-func (s *S) TestAuthKerberosCred(c *C) {
+// Kerberos has its own suite because it talks to a remote server
+// that is prepared to authenticate against a kerberos deployment.
+type KerberosSuite struct{}
+
+var _ = Suite(&KerberosSuite{})
+
+func (kerberosSuite *KerberosSuite) SetUpSuite(c *C) {
+	mgo.SetDebug(true)
+	mgo.SetStats(true)
+}
+
+func (kerberosSuite *KerberosSuite) TearDownSuite(c *C) {
+	mgo.SetDebug(false)
+	mgo.SetStats(false)
+}
+
+func (kerberosSuite *KerberosSuite) SetUpTest(c *C) {
+	mgo.SetLogger((*cLogger)(c))
+	mgo.ResetStats()
+}
+
+func (kerberosSuite *KerberosSuite) TearDownTest(c *C) {
+	mgo.SetLogger(nil)
+}
+
+func (kerberosSuite *KerberosSuite) TestAuthKerberosCred(c *C) {
 	if !*kerberosFlag {
 		c.Skip("no -kerberos")
 	}
@@ -905,34 +1055,126 @@ func (s *S) TestAuthKerberosCred(c *C) {
 		Username:  kerberosUser,
 		Mechanism: "GSSAPI",
 	}
+	windowsAppendPasswordToCredential(cred)
 	c.Logf("Connecting to %s...", kerberosHost)
 	session, err := mgo.Dial(kerberosHost)
 	c.Assert(err, IsNil)
 	defer session.Close()
 
 	c.Logf("Connected! Testing the need for authentication...")
-	names, err := session.DatabaseNames()
-	c.Assert(err, ErrorMatches, "unauthorized")
+	n, err := session.DB("kerberos").C("test").Find(M{}).Count()
+	c.Assert(err, ErrorMatches, ".*authorized.*")
 
 	c.Logf("Authenticating...")
 	err = session.Login(cred)
 	c.Assert(err, IsNil)
 	c.Logf("Authenticated!")
 
-	names, err = session.DatabaseNames()
+	n, err = session.DB("kerberos").C("test").Find(M{}).Count()
 	c.Assert(err, IsNil)
-	c.Assert(len(names) > 0, Equals, true)
+	c.Assert(n, Equals, 1)
 }
 
-func (s *S) TestAuthKerberosURL(c *C) {
+func (kerberosSuite *KerberosSuite) TestAuthKerberosURL(c *C) {
 	if !*kerberosFlag {
 		c.Skip("no -kerberos")
 	}
 	c.Logf("Connecting to %s...", kerberosHost)
-	session, err := mgo.Dial(url.QueryEscape(kerberosUser) + "@" + kerberosHost + "?authMechanism=GSSAPI")
+	connectUri := url.QueryEscape(kerberosUser) + "@" + kerberosHost + "?authMechanism=GSSAPI"
+	if runtime.GOOS == "windows" {
+		connectUri = url.QueryEscape(kerberosUser) + ":" + url.QueryEscape(getWindowsKerberosPassword()) + "@" + kerberosHost + "?authMechanism=GSSAPI"
+	}
+	session, err := mgo.Dial(connectUri)
 	c.Assert(err, IsNil)
 	defer session.Close()
-	names, err := session.DatabaseNames()
+	n, err := session.DB("kerberos").C("test").Find(M{}).Count()
 	c.Assert(err, IsNil)
-	c.Assert(len(names) > 0, Equals, true)
+	c.Assert(n, Equals, 1)
+}
+
+func (kerberosSuite *KerberosSuite) TestAuthKerberosServiceName(c *C) {
+	if !*kerberosFlag {
+		c.Skip("no -kerberos")
+	}
+
+	wrongServiceName := "wrong"
+	rightServiceName := "mongodb"
+
+	cred := &mgo.Credential{
+		Username:  kerberosUser,
+		Mechanism: "GSSAPI",
+		Service:   wrongServiceName,
+	}
+	windowsAppendPasswordToCredential(cred)
+
+	c.Logf("Connecting to %s...", kerberosHost)
+	session, err := mgo.Dial(kerberosHost)
+	c.Assert(err, IsNil)
+	defer session.Close()
+
+	c.Logf("Authenticating with incorrect service name...")
+	err = session.Login(cred)
+	c.Assert(err, ErrorMatches, ".*@LDAPTEST.10GEN.CC not found.*")
+
+	cred.Service = rightServiceName
+	c.Logf("Authenticating with correct service name...")
+	err = session.Login(cred)
+	c.Assert(err, IsNil)
+	c.Logf("Authenticated!")
+
+	n, err := session.DB("kerberos").C("test").Find(M{}).Count()
+	c.Assert(err, IsNil)
+	c.Assert(n, Equals, 1)
+}
+
+func (kerberosSuite *KerberosSuite) TestAuthKerberosServiceHost(c *C) {
+	if !*kerberosFlag {
+		c.Skip("no -kerberos")
+	}
+
+	wrongServiceHost := "eggs.bacon.tk"
+	rightServiceHost := kerberosHost
+
+	cred := &mgo.Credential{
+		Username:    kerberosUser,
+		Mechanism:   "GSSAPI",
+		ServiceHost: wrongServiceHost,
+	}
+	windowsAppendPasswordToCredential(cred)
+
+	c.Logf("Connecting to %s...", kerberosHost)
+	session, err := mgo.Dial(kerberosHost)
+	c.Assert(err, IsNil)
+	defer session.Close()
+
+	c.Logf("Authenticating with incorrect service host...")
+	err = session.Login(cred)
+	c.Assert(err, ErrorMatches, ".*@LDAPTEST.10GEN.CC not found.*")
+
+	cred.ServiceHost = rightServiceHost
+	c.Logf("Authenticating with correct service host...")
+	err = session.Login(cred)
+	c.Assert(err, IsNil)
+	c.Logf("Authenticated!")
+
+	n, err := session.DB("kerberos").C("test").Find(M{}).Count()
+	c.Assert(err, IsNil)
+	c.Assert(n, Equals, 1)
+}
+
+// No kinit on SSPI-style Kerberos, so we need to provide a password. In order
+// to avoid inlining password, require it to be set as an environment variable,
+// for instance: `SET MGO_KERBEROS_PASSWORD=this_isnt_the_password`
+func getWindowsKerberosPassword() string {
+	pw := os.Getenv(winKerberosPasswordEnv)
+	if pw == "" {
+		panic(fmt.Sprintf("Need to set %v environment variable to run Kerberos tests on Windows", winKerberosPasswordEnv))
+	}
+	return pw
+}
+
+func windowsAppendPasswordToCredential(cred *mgo.Credential) {
+	if runtime.GOOS == "windows" {
+		cred.Password = getWindowsKerberosPassword()
+	}
 }

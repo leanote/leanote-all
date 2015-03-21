@@ -28,6 +28,7 @@ package mgo
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -54,18 +55,20 @@ type mongoCluster struct {
 	direct       bool
 	failFast     bool
 	syncCount    uint
+	setName      string
 	cachedIndex  map[string]bool
 	sync         chan bool
 	dial         dialer
 }
 
-func newCluster(userSeeds []string, direct, failFast bool, dial dialer) *mongoCluster {
+func newCluster(userSeeds []string, direct, failFast bool, dial dialer, setName string) *mongoCluster {
 	cluster := &mongoCluster{
 		userSeeds:  userSeeds,
 		references: 1,
 		direct:     direct,
 		failFast:   failFast,
 		dial:       dial,
+		setName:    setName,
 	}
 	cluster.serverSynced.L = cluster.RWMutex.RLocker()
 	cluster.sync = make(chan bool, 1)
@@ -124,13 +127,15 @@ func (cluster *mongoCluster) removeServer(server *mongoServer) {
 }
 
 type isMasterResult struct {
-	IsMaster  bool
-	Secondary bool
-	Primary   string
-	Hosts     []string
-	Passives  []string
-	Tags      bson.D
-	Msg       string
+	IsMaster       bool
+	Secondary      bool
+	Primary        string
+	Hosts          []string
+	Passives       []string
+	Tags           bson.D
+	Msg            string
+	SetName        string `bson:"setName"`
+	MaxWireVersion int    `bson:"maxWireVersion"`
 }
 
 func (cluster *mongoCluster) isMaster(socket *mongoSocket, result *isMasterResult) error {
@@ -197,6 +202,11 @@ func (cluster *mongoCluster) syncServer(server *mongoServer) (info *mongoServerI
 		break
 	}
 
+	if cluster.setName != "" && result.SetName != cluster.setName {
+		logf("SYNC Server %s is not a member of replica set %q", addr, cluster.setName)
+		return nil, nil, fmt.Errorf("server %s is not a member of replica set %q", addr, cluster.setName)
+	}
+
 	if result.IsMaster {
 		debugf("SYNC %s is a master.", addr)
 		// Made an incorrect assumption above, so fix stats.
@@ -214,9 +224,11 @@ func (cluster *mongoCluster) syncServer(server *mongoServer) (info *mongoServerI
 	}
 
 	info = &mongoServerInfo{
-		Master: result.IsMaster,
-		Mongos: result.Msg == "isdbgrid",
-		Tags:   result.Tags,
+		Master:         result.IsMaster,
+		Mongos:         result.Msg == "isdbgrid",
+		Tags:           result.Tags,
+		SetName:        result.SetName,
+		MaxWireVersion: result.MaxWireVersion,
 	}
 
 	hosts = make([]string, 0, 1+len(result.Hosts)+len(result.Passives))
@@ -396,7 +408,7 @@ func (cluster *mongoCluster) server(addr string, tcpaddr *net.TCPAddr) *mongoSer
 
 func resolveAddr(addr string) (*net.TCPAddr, error) {
 	// This hack allows having a timeout on resolution.
-	conn, err := net.DialTimeout("udp", addr, 10 * time.Second)
+	conn, err := net.DialTimeout("udp", addr, 10*time.Second)
 	if err != nil {
 		log("SYNC Failed to resolve server address: ", addr)
 		return nil, errors.New("failed to resolve server address: " + addr)

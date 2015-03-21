@@ -67,9 +67,11 @@ func (dial dialer) isSet() bool {
 }
 
 type mongoServerInfo struct {
-	Master bool
-	Mongos bool
-	Tags   bson.D
+	Master         bool
+	Mongos         bool
+	Tags           bson.D
+	MaxWireVersion int
+	SetName        string
 }
 
 var defaultServerInfo mongoServerInfo
@@ -295,7 +297,7 @@ func (server *mongoServer) pinger(loop bool) {
 			time.Sleep(delay)
 		}
 		op := op
-		socket, _, err := server.AcquireSocket(0, 3 * delay)
+		socket, _, err := server.AcquireSocket(0, 3*delay)
 		if err == nil {
 			start := time.Now()
 			_, _ = socket.SimpleQuery(&op)
