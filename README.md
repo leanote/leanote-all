@@ -2,7 +2,7 @@
 
 The repository contains leanote source and dependencies, just for developers.
 
-## Current Version
+## Current version
 
 * leanote-v1.0-beta.3
 * revel 0.11
