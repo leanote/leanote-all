@@ -294,7 +294,11 @@ func (this *ShareService) AddShareNotebook(notebookId string, perm int, userId, 
 	if toUserId == "" {
 		return false, "无该用户", ""
 	}
+	return this.AddShareNotebookToUserId(notebookId, perm, userId, toUserId)
+}
 		
+// 第三方注册时没有email
+func (this *ShareService) AddShareNotebookToUserId(notebookId string, perm int, userId, toUserId string) (bool, string, string) {
 	// 添加一条记录说明两者存在关系
 	this.AddHasShareNote(userId, toUserId);
 	
@@ -327,7 +331,11 @@ func (this *ShareService) AddShareNote(noteId string, perm int, userId, email st
 	if toUserId == "" {
 		return false, "无该用户", ""
 	}
-		
+	return this.AddShareNoteToUserId(noteId, perm, userId, toUserId)
+}
+
+// 第三方测试没有userId		
+func (this *ShareService) AddShareNoteToUserId(noteId string, perm int, userId, toUserId string) (bool, string, string) {
 	// 添加一条记录说明两者存在关系
 	this.AddHasShareNote(userId, toUserId);
 	
@@ -666,8 +674,7 @@ func (this *ShareService) HasReadNotePerm(noteId, userId string) bool {
 
 // 得到笔记分享给的groups
 func (this *ShareService) GetNoteShareGroups(noteId, userId string) []info.ShareNote {
-	// 得到分组s
-	groups := groupService.GetGroups(userId)
+	groups := groupService.GetGroupsContainOf(userId)
 	
 	// 得到有分享的分组
 	shares := []info.ShareNote{}
@@ -694,9 +701,7 @@ func (this *ShareService) GetNoteShareGroups(noteId, userId string) []info.Share
 
 // 共享笔记给分组
 func (this *ShareService) AddShareNoteGroup(userId, noteId, groupId string, perm int) (bool) {
-	// 得到group, 是否是我的group
-	group := groupService.GetGroup(userId, groupId)
-	if group.GroupId == "" {
+	if !groupService.IsExistsGroupUser(userId, groupId) {
 		return false
 	}
 	
@@ -724,8 +729,7 @@ func (this *ShareService) DeleteShareNoteGroup(userId, noteId, groupId string) b
 	
 // 得到笔记本分享给的groups
 func (this *ShareService) GetNotebookShareGroups(notebookId, userId string) []info.ShareNotebook {
-	// 得到分组s
-	groups := groupService.GetGroups(userId)
+	groups := groupService.GetGroupsContainOf(userId)
 	
 	// 得到有分享的分组
 	shares := []info.ShareNotebook{}
@@ -752,9 +756,7 @@ func (this *ShareService) GetNotebookShareGroups(notebookId, userId string) []in
 }
 // 共享笔记给分组
 func (this *ShareService) AddShareNotebookGroup(userId, notebookId, groupId string, perm int) (bool) {
-	// 得到group, 是否是我的group
-	group := groupService.GetGroup(userId, groupId)
-	if group.GroupId == "" {
+	if !groupService.IsExistsGroupUser(userId, groupId) {
 		return false
 	}
 	
