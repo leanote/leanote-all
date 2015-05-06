@@ -129,7 +129,7 @@ func tinymce() {
 
 func main() {
 	// 压缩tinymce
-	tinymce()
+	// tinymce()
 	
 	dev();
 	
