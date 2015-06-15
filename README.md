@@ -13,6 +13,7 @@ The repository contains leanote source and dependencies, just for developers.
 * Read only mode
 * Share note/notebook with group
 * Tinymce -> 4.1.9
+* Add french lang
 
 ## How to upgrade to v1.0
 http://leanote.leanote.com/post/leanote-v1.0-beta.4-alpha
