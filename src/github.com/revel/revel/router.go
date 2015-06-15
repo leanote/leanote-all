@@ -212,7 +212,7 @@ func parseRoutes(routesPath, joinedPath, content string, validate bool) ([]*Rout
 		if strings.HasSuffix(joinedPath, "/") && strings.HasPrefix(path, "/") {
 			joinedPath = joinedPath[0 : len(joinedPath)-1]
 		}
-		path = strings.Join([]string{joinedPath, path}, "")
+		path = strings.Join([]string{AppRoot, joinedPath, path}, "")
 
 		// This will import the module routes under the path described in the
 		// routes file (joinedPath param). e.g. "* /jobs module:jobs" -> all
@@ -375,7 +375,7 @@ func (router *Router) Reverse(action string, argValues map[string]string) *Actio
 			pathElements = strings.Split(route.Path, "/")
 		)
 		for i, el := range pathElements {
-			if el == "" || el[0] != ':' {
+			if el == "" || (el[0] != ':' && el[0] != '*') {
 				continue
 			}
 
@@ -423,10 +423,12 @@ func (router *Router) Reverse(action string, argValues map[string]string) *Actio
 func init() {
 	OnAppStart(func() {
 		MainRouter = NewRouter(path.Join(BasePath, "conf", "routes"))
+		err := MainRouter.Refresh()
 		if MainWatcher != nil && Config.BoolDefault("watch.routes", true) {
 			MainWatcher.Listen(MainRouter, MainRouter.path)
-		} else {
-			MainRouter.Refresh()
+		} else if err != nil {
+			// Not in dev mode and Route loading failed, we should crash.
+			ERROR.Panicln(err.Error())
 		}
 	})
 }

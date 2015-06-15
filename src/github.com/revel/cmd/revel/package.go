@@ -17,7 +17,7 @@ This allows it to be deployed and run on a machine that lacks a Go installation.
 
 For example:
 
-    revel package github.com/revel/revel/samples/chat
+    revel package github.com/revel/samples/chat
 `,
 }
 

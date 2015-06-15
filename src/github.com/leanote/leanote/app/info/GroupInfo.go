@@ -20,6 +20,6 @@ type Group struct {
 type GroupUser struct {
 	GroupUserId bson.ObjectId `bson:"_id"` // 谁的
 	GroupId     bson.ObjectId `GroupId`    // 分组
-	UserId      bson.ObjectId `UserId`     // 用户
+	UserId      bson.ObjectId `UserId`     //  用户
 	CreatedTime time.Time     `CreatedTime`
 }

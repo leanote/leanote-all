@@ -53,6 +53,8 @@ cookie.prefix = REVEL
 # eavesdropping.
 cookie.secure = false
 
+# Limit cookie access to a given domain
+#cookie.domain =
 
 # Define when your session cookie expires. Possible values:
 # "720h"
@@ -90,7 +92,7 @@ i18n.default_language = en
 # Module to serve static content such as CSS, JavaScript and Media files
 # Allows Routes like this:
 #  `Static.ServeModule("modulename","public")`
-module.static=github.com/revel/revel/modules/static
+module.static=github.com/revel/modules/static
 
 
 
@@ -114,10 +116,15 @@ results.pretty = true
 watch = true
 
 
+# If you set watcher.mode = "eager", the server starts to recompile
+# your application every time your application's files change.
+watcher.mode = "normal"
+
+
 # Module to run code tests in the browser
 # See:
 #   http://revel.github.io/manual/testing.html
-module.testrunner = github.com/revel/revel/modules/testrunner
+module.testrunner = github.com/revel/modules/testrunner
 
 
 # Where to log the various Revel logs

@@ -29,6 +29,8 @@ type TemplateLoader struct {
 	paths []string
 	// Map from template name to the path from whence it was loaded.
 	templatePaths map[string]string
+	// templateNames is a map from lower case template name to the real template name.
+	templateNames map[string]string
 }
 
 type Template interface {
@@ -192,6 +194,7 @@ func (loader *TemplateLoader) Refresh() *Error {
 
 	loader.compileError = nil
 	loader.templatePaths = map[string]string{}
+	loader.templateNames = map[string]string{}
 
 	// Set the template delimiters for the project if present, then split into left
 	// and right delimiters around a space character
@@ -270,8 +273,7 @@ func (loader *TemplateLoader) Refresh() *Error {
 
 			var fileStr string
 
-			// addTemplate allows the same template to be added multiple
-			// times with different template names.
+			// addTemplate loads a template file into the Go template loader so it can be rendered later
 			addTemplate := func(templateName string) (err error) {
 				TRACE.Println("adding template: ", templateName)
 				// Convert template names to use forward slashes, even on Windows.
@@ -280,11 +282,13 @@ func (loader *TemplateLoader) Refresh() *Error {
 				}
 
 				// If we already loaded a template of this name, skip it.
-				if _, ok := loader.templatePaths[templateName]; ok {
+				lowerTemplateName := strings.ToLower(templateName)
+				if _, ok := loader.templateNames[lowerTemplateName]; ok {
 					return nil
 				}
 
 				loader.templatePaths[templateName] = path
+				loader.templateNames[lowerTemplateName] = templateName
 
 				// Load the file if we haven't already
 				if fileStr == "" {
@@ -311,8 +315,6 @@ func (loader *TemplateLoader) Refresh() *Error {
 								}
 							}
 						}()
-						// Admin/Blog/list.html______________
-						TRACE.Println(templateName + "______________")
 						templateSet = template.New(templateName).Funcs(TemplateFuncs)
 						// If alternate delimiters set for the project, change them for this set
 						if splitDelims != nil && basePath == ViewsPath {
@@ -341,11 +343,7 @@ func (loader *TemplateLoader) Refresh() *Error {
 
 			templateName := path[len(fullSrcDir)+1:]
 
-			// Lower case the file name for case-insensitive matching
-			lowerCaseTemplateName := strings.ToLower(templateName)
-
 			err = addTemplate(templateName)
-			err = addTemplate(lowerCaseTemplateName)
 
 			// Store / report the first error encountered.
 			if err != nil && loader.compileError == nil {
@@ -413,10 +411,11 @@ func parseTemplateError(err error) (templateName string, line int, description s
 // An Error is returned if there was any problem with any of the templates.  (In
 // this case, if a template is returned, it may still be usable.)
 func (loader *TemplateLoader) Template(name string) (Template, error) {
-	// Lower case the file name to support case-insensitive matching
-	name = strings.ToLower(name)
+	// Case-insensitive matching of template file name
+	templateName := loader.templateNames[strings.ToLower(name)]
+
 	// Look up and return the template.
-	tmpl := loader.templateSet.Lookup(name)
+	tmpl := loader.templateSet.Lookup(templateName)
 
 	// This is necessary.
 	// If a nil loader.compileError is returned directly, a caller testing against
@@ -455,12 +454,15 @@ func (gotmpl GoTemplate) Content() []string {
 
 // Return a url capable of invoking a given controller method:
 // "Application.ShowApp 123" => "/app/123"
-func ReverseUrl(args ...interface{}) (string, error) {
+func ReverseUrl(args ...interface{}) (template.URL, error) {
 	if len(args) == 0 {
 		return "", fmt.Errorf("no arguments provided to reverse route")
 	}
 
 	action := args[0].(string)
+	if action == "Root" {
+		return template.URL(AppRoot), nil
+	}
 	actionSplit := strings.Split(action, ".")
 	if len(actionSplit) != 2 {
 		return "", fmt.Errorf("reversing '%s', expected 'Controller.Action'", action)
@@ -472,13 +474,18 @@ func ReverseUrl(args ...interface{}) (string, error) {
 		return "", fmt.Errorf("reversing %s: %s", action, err)
 	}
 
+	if len(c.MethodType.Args) < len(args)-1 {
+		return "", fmt.Errorf("reversing %s: route defines %d args, but received %d",
+			action, len(c.MethodType.Args), len(args)-1)
+	}
+
 	// Unbind the arguments.
 	argsByName := make(map[string]string)
 	for i, argValue := range args[1:] {
 		Unbind(argsByName, c.MethodType.Args[i].Name, argValue)
 	}
 
-	return MainRouter.Reverse(args[0].(string), argsByName).Url, nil
+	return template.URL(MainRouter.Reverse(args[0].(string), argsByName).Url), nil
 }
 
 func Slug(text string) string {
