@@ -140,7 +140,7 @@ Tag.appendTag = function(tag, save) {
 			classes = "label label-default";
 		}
 	}
-	var rawText = text;
+	var rawText = trimTitle(text);
 	if(LEA.locale == "zh") {
 		text = Tag.mapEn2Cn[text] || text;
 		rawText = Tag.mapCn2En[rawText] || rawText;
@@ -235,6 +235,7 @@ Tag.renderTagNav = function(tags) {
 		if(LEA.locale == "zh") {
 			var text = Tag.mapEn2Cn[tag] || text;
 		}
+		text = trimTitle(text);
 		var classes = Tag.classes[tag] || "label label-default";
 		$("#tagNav").append(tt('<li data-tag="?"><a> <span class="?">?</span> <span class="tag-delete">X</span></li>', tag, classes, text));
 	}

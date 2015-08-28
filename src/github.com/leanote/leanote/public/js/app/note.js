@@ -679,10 +679,10 @@ Note.renderChangedNote = function(changedNote) {
 	// 找到左侧相应的note
 	var $leftNoteNav = $(tt('[noteId="?"]', changedNote.NoteId));
 	if(changedNote.Title) {
-		$leftNoteNav.find(".item-title").html(changedNote.Title);
+		$leftNoteNav.find(".item-title").html(trimTitle(changedNote.Title));
 	}
 	if(changedNote.Desc) {
-		$leftNoteNav.find(".desc").html(changedNote.Desc);
+		$leftNoteNav.find(".desc").html(trimTitle(changedNote.Desc));
 	}
 	if(changedNote.ImgSrc) {
 		$thumb = $leftNoteNav.find(".item-thumb");
@@ -736,7 +736,7 @@ Note.renderNote = function(note) {
 		return;
 	}
 	// title
-	$("#noteTitle").val(trimTitle(note.Title));
+	$("#noteTitle").val(note.Title);
 	
 	// 当前正在编辑的
 	// tags

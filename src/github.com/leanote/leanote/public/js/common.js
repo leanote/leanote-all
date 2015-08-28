@@ -1298,5 +1298,9 @@ function setHash(key, value) {
 }
 
 var trimTitle = function(title) {
-	return title.replace(/<.*?script.*?>/g, '');
+	if(!title) {
+		return '';
+	}
+	return title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	// return title.replace(/<.*?script.*?>/g, '');
 };

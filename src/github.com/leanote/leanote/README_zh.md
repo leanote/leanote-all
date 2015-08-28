@@ -1,4 +1,6 @@
-# Leanote产品
+# Leanote
+
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/leanote/leanote?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ## 1. 介绍
 
@@ -56,15 +58,16 @@ Leanote还有很多问题, 如果你喜欢它, 欢迎加入我们一起完善lea
 
 ## 9. 其它相关项目
 * [Leanote Desktop App](https://github.com/leanote/desktop-app), [下载地址](http://app.leanote.com)
-* [Leanote IOS](https://github.com/leanote/leanote-ios), 开发阶段
+* [Leanote IOS](https://github.com/leanote/leanote-ios), [从App Store下载](https://itunes.apple.com/zn/app/leanote/id1022302858?mt=8)
 * [Leanote Android](https://github.com/Dminter/leanote-android-client), 开发阶段
 
-同样, 欢迎加入我们!
+欢迎加入我们!
 
-## 讨论
+## 联系&加入我们
+* Email: leanote@leanote.com
 * [leanote 社区](http://bbs.leanote.com)
-* QQ群: 158716820
-* [leanote google group](https://groups.google.com/forum/#!forum/leanote)
+* QQ群: 158716820, 256076853
+* [Leanote Google Group](https://groups.google.com/forum/#!forum/leanote)
 
 ----------------------------------------------------------------
 [English](README.md)

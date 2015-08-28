@@ -1,5 +1,6 @@
 
 # Leanote
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/leanote/leanote?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ## 1. Introduction
 
@@ -54,15 +55,18 @@ Support us, [donate us](http://leanote.org/#donate). And thanks [donators](http:
 
 ## 9. Related projects
 * [Leanote Desktop App](https://github.com/leanote/desktop-app), [Download](http://app.leanote.com)
-* [Leanote IOS](https://github.com/leanote/leanote-ios), development phase
+* [Leanote IOS](https://github.com/leanote/leanote-ios), [Download From App Store](https://itunes.apple.com/en/app/leanote/id1022302858?mt=8)
 * [Leanote Android](https://github.com/Dminter/leanote-android-client), development phase
 
 And also, you are welcome to join us.
 
-## 9. Discussion
-* [leanote bbs](http://bbs.leanote.com)
-* [leanote google group](https://groups.google.com/forum/#!forum/leanote)
-* QQ Group: 158716820
+## 9. Support & Join us
+
+* Email: leanote@leanote.com
+* [Leanote BBS](http://bbs.leanote.com)
+* [Leanote Google Group](https://groups.google.com/forum/#!forum/leanote)
+* QQ Group: 158716820, 256076853
+
 
 -----------------------------------------------------------------------
 [中文](README_zh.md)

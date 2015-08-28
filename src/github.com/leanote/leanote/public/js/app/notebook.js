@@ -58,7 +58,7 @@ Notebook.getNotebook = function(notebookId) {
 Notebook.getNotebookTitle = function(notebookId) {
 	var notebook = Notebook.cache[notebookId];
 	if(notebook) {
-		return notebook.Title;
+		return trimTitle(notebook.Title);
 	} else {
 		return "未知";
 	}

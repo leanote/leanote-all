@@ -1122,6 +1122,9 @@ h3 {
 .mce-btn i {
   text-shadow: none;
 }
+.mce-colorbutton.mce-btn-small .mce-preview {
+  width: 15px;
+}
 #noteList {
   z-index: 333;
 }
