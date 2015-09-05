@@ -113,88 +113,88 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*controllers.Auth)(nil),
+	revel.RegisterController((*controllers.File)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
-				Name: "Login",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "from", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "DoLogin",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "captcha", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "Logout",
+				Name: "UploadBlogLogo",
 				Args: []*revel.MethodArg{ 
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "Demo",
+				Name: "PasteImage",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "UploadAvatar",
 				Args: []*revel.MethodArg{ 
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "Register",
+				Name: "UploadImageLeaui",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "from", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "iu", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "albumId", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "DoRegister",
+				Name: "GetImages",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "iu", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "albumId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "key", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "page", Type: reflect.TypeOf((*int)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "FindPassword",
+				Name: "UpdateImageTitle",
 				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "fileId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "DoFindPassword",
+				Name: "DeleteImage",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "fileId", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "FindPassword2",
+				Name: "OutputImage",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "token", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "fileId", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "FindPasswordUpdate",
+				Name: "CopyImage",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "token", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "userId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "fileId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "toUserId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "CopyHttpImage",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "src", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -202,100 +202,27 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*controllers.Captcha)(nil),
+	revel.RegisterController((*controllers.Index)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
-				Name: "Get",
+				Name: "Default",
 				Args: []*revel.MethodArg{ 
-				},
-				RenderArgNames: map[int][]string{ 
-					42: []string{ 
-					},
-				},
-			},
-			
-		})
-	
-	revel.RegisterController((*controllers.Tag)(nil),
-		[]*revel.MethodType{
-			&revel.MethodType{
-				Name: "UpdateTag",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "tag", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
-			&revel.MethodType{
-				Name: "DeleteTag",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "tag", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			
-		})
-	
-	revel.RegisterController((*controllers.Notebook)(nil),
-		[]*revel.MethodType{
 			&revel.MethodType{
 				Name: "Index",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "notebook", Type: reflect.TypeOf((*info.Notebook)(nil)) },
-					&revel.MethodArg{Name: "i", Type: reflect.TypeOf((*int)(nil)) },
-					&revel.MethodArg{Name: "name", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "GetNotebooks",
+				Name: "Suggestion",
 				Args: []*revel.MethodArg{ 
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "DeleteNotebook",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "notebookId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "AddNotebook",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "notebookId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "parentNotebookId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "UpdateNotebookTitle",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "notebookId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "DragNotebooks",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "data", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "SetNotebook2Blog",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "notebookId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "isBlog", Type: reflect.TypeOf((*bool)(nil)) },
+					&revel.MethodArg{Name: "addr", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "suggestion", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -420,6 +347,130 @@ func main() {
 					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
 					&revel.MethodArg{Name: "isBlog", Type: reflect.TypeOf((*bool)(nil)) },
 					&revel.MethodArg{Name: "isTop", Type: reflect.TypeOf((*bool)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			
+		})
+	
+	revel.RegisterController((*controllers.Attach)(nil),
+		[]*revel.MethodType{
+			&revel.MethodType{
+				Name: "UploadAttach",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "DeleteAttach",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "attachId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "GetAttachs",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "Download",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "attachId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "DownloadAll",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			
+		})
+	
+	revel.RegisterController((*controllers.Notebook)(nil),
+		[]*revel.MethodType{
+			&revel.MethodType{
+				Name: "Index",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "notebook", Type: reflect.TypeOf((*info.Notebook)(nil)) },
+					&revel.MethodArg{Name: "i", Type: reflect.TypeOf((*int)(nil)) },
+					&revel.MethodArg{Name: "name", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "GetNotebooks",
+				Args: []*revel.MethodArg{ 
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "DeleteNotebook",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "notebookId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "AddNotebook",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "notebookId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "parentNotebookId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "UpdateNotebookTitle",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "notebookId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "DragNotebooks",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "data", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "SetNotebook2Blog",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "notebookId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "isBlog", Type: reflect.TypeOf((*bool)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			
+		})
+	
+	revel.RegisterController((*controllers.NoteContentHistory)(nil),
+		[]*revel.MethodType{
+			&revel.MethodType{
+				Name: "ListHistories",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -750,44 +801,34 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*controllers.Attach)(nil),
+	revel.RegisterController((*controllers.Captcha)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
-				Name: "UploadAttach",
+				Name: "Get",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+					42: []string{ 
+					},
+				},
+			},
+			
+		})
+	
+	revel.RegisterController((*controllers.Tag)(nil),
+		[]*revel.MethodType{
+			&revel.MethodType{
+				Name: "UpdateTag",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "tag", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "DeleteAttach",
+				Name: "DeleteTag",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "attachId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "GetAttachs",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "Download",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "attachId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "DownloadAll",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "tag", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -972,129 +1013,88 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*controllers.File)(nil),
+	revel.RegisterController((*controllers.Auth)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
-				Name: "UploadBlogLogo",
+				Name: "Login",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "from", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "DoLogin",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "captcha", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "Logout",
 				Args: []*revel.MethodArg{ 
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "PasteImage",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "UploadAvatar",
+				Name: "Demo",
 				Args: []*revel.MethodArg{ 
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "UploadImageLeaui",
+				Name: "Register",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "albumId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "from", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "iu", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "GetImages",
+				Name: "DoRegister",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "albumId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "key", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "page", Type: reflect.TypeOf((*int)(nil)) },
+					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "iu", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "UpdateImageTitle",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "fileId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "DeleteImage",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "fileId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "OutputImage",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "fileId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "CopyImage",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "userId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "fileId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "toUserId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "CopyHttpImage",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "src", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			
-		})
-	
-	revel.RegisterController((*controllers.Index)(nil),
-		[]*revel.MethodType{
-			&revel.MethodType{
-				Name: "Default",
+				Name: "FindPassword",
 				Args: []*revel.MethodArg{ 
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "Index",
+				Name: "DoFindPassword",
 				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "Suggestion",
+				Name: "FindPassword2",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "addr", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "suggestion", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "token", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
-			
-		})
-	
-	revel.RegisterController((*controllers.NoteContentHistory)(nil),
-		[]*revel.MethodType{
 			&revel.MethodType{
-				Name: "ListHistories",
+				Name: "FindPasswordUpdate",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "noteId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "token", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -1195,7 +1195,7 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*admin.AdminEmail)(nil),
+	revel.RegisterController((*admin.AdminSetting)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
 				Name: "Email",
@@ -1216,6 +1216,19 @@ func main() {
 				Args: []*revel.MethodArg{ 
 					&revel.MethodArg{Name: "recommendTags", Type: reflect.TypeOf((*string)(nil)) },
 					&revel.MethodArg{Name: "newTags", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "ShareNote",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "registerSharedUserId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "registerSharedNotebookPerms", Type: reflect.TypeOf((*[]int)(nil)) },
+					&revel.MethodArg{Name: "registerSharedNotePerms", Type: reflect.TypeOf((*[]int)(nil)) },
+					&revel.MethodArg{Name: "registerSharedNotebookIds", Type: reflect.TypeOf((*[]string)(nil)) },
+					&revel.MethodArg{Name: "registerSharedNoteIds", Type: reflect.TypeOf((*[]string)(nil)) },
+					&revel.MethodArg{Name: "registerCopyNoteIds", Type: reflect.TypeOf((*[]string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -1252,82 +1265,57 @@ func main() {
 				},
 			},
 			&revel.MethodType{
-				Name: "Set",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "emailHost", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "emailPort", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "emailUsername", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "emailPassword", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "Template",
+				Name: "SubDomain",
 				Args: []*revel.MethodArg{ 
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "SendEmailToEmails",
+				Name: "DoSubDomain",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "sendEmails", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "latestEmailSubject", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "latestEmailBody", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "verified", Type: reflect.TypeOf((*bool)(nil)) },
-					&revel.MethodArg{Name: "saveAsOldEmail", Type: reflect.TypeOf((*bool)(nil)) },
+					&revel.MethodArg{Name: "noteSubDomain", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "blogSubDomain", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "leaSubDomain", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "blackSubDomains", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "allowCustomDomain", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "blackCustomDomains", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "SendToUsers2",
+				Name: "OpenRegister",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "emails", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "latestEmailSubject", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "latestEmailBody", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "verified", Type: reflect.TypeOf((*bool)(nil)) },
-					&revel.MethodArg{Name: "saveAsOldEmail", Type: reflect.TypeOf((*bool)(nil)) },
+					&revel.MethodArg{Name: "openRegister", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "SendEmailDialog",
+				Name: "HomePage",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "emails", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "homePage", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "SendToUsers",
+				Name: "Mongodb",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "userFilterEmail", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "userFilterWhiteList", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "userFilterBlackList", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "latestEmailSubject", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "latestEmailBody", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "verified", Type: reflect.TypeOf((*bool)(nil)) },
-					&revel.MethodArg{Name: "saveAsOldEmail", Type: reflect.TypeOf((*bool)(nil)) },
+					&revel.MethodArg{Name: "mongodumpPath", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "mongorestorePath", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "DeleteEmails",
+				Name: "UploadSize",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "ids", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "List",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "sorter", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "keywords", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "uploadImageSize", Type: reflect.TypeOf((*float64)(nil)) },
+					&revel.MethodArg{Name: "uploadAvatarSize", Type: reflect.TypeOf((*float64)(nil)) },
+					&revel.MethodArg{Name: "uploadBlogLogoSize", Type: reflect.TypeOf((*float64)(nil)) },
+					&revel.MethodArg{Name: "uploadAttachSize", Type: reflect.TypeOf((*float64)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -1512,7 +1500,7 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*admin.AdminSetting)(nil),
+	revel.RegisterController((*admin.AdminEmail)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
 				Name: "Email",
@@ -1533,19 +1521,6 @@ func main() {
 				Args: []*revel.MethodArg{ 
 					&revel.MethodArg{Name: "recommendTags", Type: reflect.TypeOf((*string)(nil)) },
 					&revel.MethodArg{Name: "newTags", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "ShareNote",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "registerSharedUserId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "registerSharedNotebookPerms", Type: reflect.TypeOf((*[]int)(nil)) },
-					&revel.MethodArg{Name: "registerSharedNotePerms", Type: reflect.TypeOf((*[]int)(nil)) },
-					&revel.MethodArg{Name: "registerSharedNotebookIds", Type: reflect.TypeOf((*[]string)(nil)) },
-					&revel.MethodArg{Name: "registerSharedNoteIds", Type: reflect.TypeOf((*[]string)(nil)) },
-					&revel.MethodArg{Name: "registerCopyNoteIds", Type: reflect.TypeOf((*[]string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -1582,87 +1557,82 @@ func main() {
 				},
 			},
 			&revel.MethodType{
-				Name: "SubDomain",
+				Name: "Set",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "emailHost", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "emailPort", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "emailUsername", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "emailPassword", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "Template",
 				Args: []*revel.MethodArg{ 
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "DoSubDomain",
+				Name: "SendEmailToEmails",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "noteSubDomain", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "blogSubDomain", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "leaSubDomain", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "blackSubDomains", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "allowCustomDomain", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "blackCustomDomains", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "sendEmails", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "latestEmailSubject", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "latestEmailBody", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "verified", Type: reflect.TypeOf((*bool)(nil)) },
+					&revel.MethodArg{Name: "saveAsOldEmail", Type: reflect.TypeOf((*bool)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "OpenRegister",
+				Name: "SendToUsers2",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "openRegister", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "emails", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "latestEmailSubject", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "latestEmailBody", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "verified", Type: reflect.TypeOf((*bool)(nil)) },
+					&revel.MethodArg{Name: "saveAsOldEmail", Type: reflect.TypeOf((*bool)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "HomePage",
+				Name: "SendEmailDialog",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "homePage", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "emails", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "Mongodb",
+				Name: "SendToUsers",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "mongodumpPath", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "mongorestorePath", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "userFilterEmail", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "userFilterWhiteList", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "userFilterBlackList", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "latestEmailSubject", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "latestEmailBody", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "verified", Type: reflect.TypeOf((*bool)(nil)) },
+					&revel.MethodArg{Name: "saveAsOldEmail", Type: reflect.TypeOf((*bool)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "UploadSize",
+				Name: "DeleteEmails",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "uploadImageSize", Type: reflect.TypeOf((*float64)(nil)) },
-					&revel.MethodArg{Name: "uploadAvatarSize", Type: reflect.TypeOf((*float64)(nil)) },
-					&revel.MethodArg{Name: "uploadBlogLogoSize", Type: reflect.TypeOf((*float64)(nil)) },
-					&revel.MethodArg{Name: "uploadAttachSize", Type: reflect.TypeOf((*float64)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			
-		})
-	
-	revel.RegisterController((*api.ApiAuth)(nil),
-		[]*revel.MethodType{
-			&revel.MethodType{
-				Name: "Login",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "ids", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "Logout",
+				Name: "List",
 				Args: []*revel.MethodArg{ 
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "Register",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "sorter", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "keywords", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -1903,54 +1873,29 @@ func main() {
 			
 		})
 	
-	revel.RegisterController((*member.MemberGroup)(nil),
+	revel.RegisterController((*api.ApiAuth)(nil),
 		[]*revel.MethodType{
 			&revel.MethodType{
-				Name: "Index",
+				Name: "Login",
 				Args: []*revel.MethodArg{ 
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "AddGroup",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "UpdateGroupTitle",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "groupId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "DeleteGroup",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "groupId", Type: reflect.TypeOf((*string)(nil)) },
-				},
-				RenderArgNames: map[int][]string{ 
-				},
-			},
-			&revel.MethodType{
-				Name: "AddUser",
-				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "groupId", Type: reflect.TypeOf((*string)(nil)) },
 					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
 			},
 			&revel.MethodType{
-				Name: "DeleteUser",
+				Name: "Logout",
 				Args: []*revel.MethodArg{ 
-					&revel.MethodArg{Name: "groupId", Type: reflect.TypeOf((*string)(nil)) },
-					&revel.MethodArg{Name: "userId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "Register",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "pwd", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},
@@ -2313,6 +2258,61 @@ func main() {
 					&revel.MethodArg{Name: "perPageSize", Type: reflect.TypeOf((*int)(nil)) },
 					&revel.MethodArg{Name: "sortField", Type: reflect.TypeOf((*string)(nil)) },
 					&revel.MethodArg{Name: "isAsc", Type: reflect.TypeOf((*bool)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			
+		})
+	
+	revel.RegisterController((*member.MemberGroup)(nil),
+		[]*revel.MethodType{
+			&revel.MethodType{
+				Name: "Index",
+				Args: []*revel.MethodArg{ 
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "AddGroup",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "UpdateGroupTitle",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "groupId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "title", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "DeleteGroup",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "groupId", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "AddUser",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "groupId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "email", Type: reflect.TypeOf((*string)(nil)) },
+				},
+				RenderArgNames: map[int][]string{ 
+				},
+			},
+			&revel.MethodType{
+				Name: "DeleteUser",
+				Args: []*revel.MethodArg{ 
+					&revel.MethodArg{Name: "groupId", Type: reflect.TypeOf((*string)(nil)) },
+					&revel.MethodArg{Name: "userId", Type: reflect.TypeOf((*string)(nil)) },
 				},
 				RenderArgNames: map[int][]string{ 
 				},

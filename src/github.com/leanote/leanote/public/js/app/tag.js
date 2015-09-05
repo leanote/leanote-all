@@ -108,7 +108,7 @@ Tag.renderReadOnlyTags = function(tags) {
 		if(!classes) {
 			classes = getNextDefaultClasses();
 		}
-		tag = tt('<span class="?">?</span>', classes, text);
+		tag = tt('<span class="?">?</span>', classes, trimTitle(text));
 		
 		$("#noteReadTags").append(tag);
 	}
@@ -140,7 +140,7 @@ Tag.appendTag = function(tag, save) {
 			classes = "label label-default";
 		}
 	}
-	var rawText = trimTitle(text);
+	var rawText = text;
 	if(LEA.locale == "zh") {
 		text = Tag.mapEn2Cn[text] || text;
 		rawText = Tag.mapCn2En[rawText] || rawText;
