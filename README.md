@@ -1,5 +1,7 @@
 # leanote-all
 
+[![Build Status](https://travis-ci.org/leanote/leanote-all.svg)](https://travis-ci.org/leanote/leanote-all)
+
 The repository contains leanote source and dependencies, just for developers.
 
 ## Current version
