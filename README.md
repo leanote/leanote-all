@@ -10,7 +10,7 @@ The repository contains leanote source and dependencies, just for developers.
 * revel 0.12
 * [mgo](http://blog.labix.org/2015/01/24/readying-mgo-for-mongodb-3-0) support for mongodb-3.0
 
-## leanote-v1.0
+## leanote-v1.0.1
 * Support API (Support [leanote-desktop-app](https://github.com/leanote/desktop-app))
 * Read only mode
 * Share note/notebook with group
