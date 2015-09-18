@@ -7,12 +7,12 @@ services:
 install:
   - pwd
   - ls
-  - export GOPATH=.
+  - export GOPATH=`pwd`
   - echo $GOPATH
+  # - go install github.com/revel/cmd/revel
   - cd src/github.com/leanote/leanote
   - pwd
   - ls
-  - go install github.com/revel/cmd/revel
 
 script:
   - mongo --version
