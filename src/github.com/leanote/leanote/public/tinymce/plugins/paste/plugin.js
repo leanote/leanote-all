@@ -80,7 +80,7 @@
 		}
 	}
 
-// Included from: js/tinymce/plugins/paste/classes/Utils.js
+// Included from: /Users/life/leanote2/public/tinymce/plugins/paste/classes/Utils.js
 
 /**
  * Utils.js
@@ -181,7 +181,7 @@ define("tinymce/pasteplugin/Utils", [
 	};
 });
 
-// Included from: js/tinymce/plugins/paste/classes/Clipboard.js
+// Included from: /Users/life/leanote2/public/tinymce/plugins/paste/classes/Clipboard.js
 
 // Included from: js/tinymce/plugins/paste/classes/Clipboard.js
 
@@ -526,7 +526,31 @@ define("tinymce/pasteplugin/Clipboard", [
 			document.body.appendChild(img);
 		}
 		
+		// 是否有图片的粘贴, 有则删除paste bin
+		// 因为paste bin隐藏不见了, 如果不删除, 则editor_drop_paste的图片就会在这个bin下
+		// 而且, paste bin最后会删除, 导致图片不能显示
+		function hasImage(event) {
+			var items;
+			if (event.clipboardData) {
+				items = event.clipboardData.items;
+			}
+			else if(event.originalEvent && event.originalEvent.clipboardData) {
+				items = event.originalEvent.clipboardData;
+			}
+			if (!items) {
+				return false;
+			}
+			// find pasted image among pasted items
+			for (var i = 0; i < items.length; i++) {
+				if (items[i].type.indexOf("image") === 0) {
+					return true;
+			    }
+			}
+			return false;
+		}
+		
 		// 上传图片
+		// 已过时, 不用, pasteImage在editor_drop_paste.js中用
 		function pasteImage(event) {
 			// use event.originalEvent.clipboard for newer chrome versions
 			  var items = (event.clipboardData  || event.originalEvent.clipboardData).items; // 可能有多个file, 找到属于图片的file
@@ -591,6 +615,12 @@ define("tinymce/pasteplugin/Clipboard", [
 
 		editor.on('paste', function(e) {
 			if(inAcePrevent()) {
+				removePasteBin();
+				return;
+			}
+			
+			if (hasImage(e)) {
+				removePasteBin();
 				return;
 			}
 
@@ -644,27 +674,14 @@ define("tinymce/pasteplugin/Clipboard", [
 					pasteHtml(html, clipboardContent['text/plain']);
 				}
 			}, 0);
-			
-			//-----------
-			// paste image
-			try {
-				/*
-				if(pasteImage(e)) {
-					return;
-				}
-				*/
-			} catch(e) {};
-
 		});
-		
-		
 
 		self.pasteHtml = pasteHtml;
 		self.pasteText = pasteText;
 	};
 });
 
-// Included from: js/tinymce/plugins/paste/classes/WordFilter.js
+// Included from: /Users/life/leanote2/public/tinymce/plugins/paste/classes/WordFilter.js
 
 /**
  * WordFilter.js
@@ -930,7 +947,7 @@ define("tinymce/pasteplugin/WordFilter", [
 	return WordFilter;
 });
 
-// Included from: js/tinymce/plugins/paste/classes/Quirks.js
+// Included from: /Users/life/leanote2/public/tinymce/plugins/paste/classes/Quirks.js
 
 /**
  * Quirks.js
@@ -1056,7 +1073,7 @@ define("tinymce/pasteplugin/Quirks", [
 	};
 });
 
-// Included from: js/tinymce/plugins/paste/classes/Plugin.js
+// Included from: /Users/life/leanote2/public/tinymce/plugins/paste/classes/Plugin.js
 
 /**
  * Plugin.js
