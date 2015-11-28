@@ -288,9 +288,9 @@ define('editor_drop_paste', ['fileupload'], function() {
 	    // Initialize the jQuery File Upload plugin
 	    var dom, editor;
 	    // 2015/4/17 添加wmd-input markdown paste image
-	    $('#editorContent, #wmd-input .editor-content').fileupload({
+	    $('#editorContent, #left-column').fileupload({
 	        dataType: 'json',
-	        pasteZone: $('#editorContent, #wmd-input'),
+	        pasteZone: $('#editorContent, #left-column'),
 	        dropZone: '', // 只允许paste
 	        maxFileSize: 210000,
 	        url: "/file/pasteImage",
@@ -313,9 +313,9 @@ define('editor_drop_paste', ['fileupload'], function() {
 	        // 不知道为什么会触发两次
 	        add: function(e, data) {
 	        	// 防止两次
+        		// console.trace(e);
 	        	var now = (new Date()).getTime();
 	        	if (now - lastTime < 500) {
-	        		// console.log('haha');
 	        		return;
 	        	}
 	        	// console.log('nono');
@@ -324,16 +324,21 @@ define('editor_drop_paste', ['fileupload'], function() {
 	        	var note = Note.getCurNote();
 	        	curNote = note;
 	        	if(!note || note.IsNew) {
-	        		alert("This note hasn't saved, please save it firstly!")
-	        		return;
+	        		// alert(getMsg("Please save note firstly!"));
+	        		// return;
 	        	}
-	        	// 先显示loading...
-				editor = tinymce.EditorManager.activeEditor; 
-				if(!note.IsMarkdown) {
-					var process = new Process(editor);
-				}
-				data.process = process;
-	            var jqXHR = data.submit();
+	        	
+	        	// LEA.removePasteBin();
+	        	// 为什么要延迟? 为了让paste plugin先执行, 删除掉paste bin
+	        	setTimeout(function () {
+		        	// 先显示loading...
+					editor = tinymce.EditorManager.activeEditor; 
+					if(!note.IsMarkdown) {
+						var process = new Process(editor);
+					}
+					data.process = process;
+		            var jqXHR = data.submit();
+	        	}, 20);
 	            
 				/*
 				d.id = '__mcenew' + (new Date()).getTime();

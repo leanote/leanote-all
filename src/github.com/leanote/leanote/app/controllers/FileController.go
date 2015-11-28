@@ -36,18 +36,20 @@ func (c File) UploadBlogLogo() revel.Result {
 func (c File) PasteImage(noteId string) revel.Result {
 	re := c.uploadImage("pasteImage", "")
 
-	userId := c.GetUserId()
-	note := noteService.GetNoteById(noteId)
-	if note.UserId != "" {
-		noteUserId := note.UserId.Hex()
-		if noteUserId != userId {
-			// 是否是有权限协作的
-			if shareService.HasUpdatePerm(noteUserId, userId, noteId) {
-				// 复制图片之, 图片复制给noteUserId
-				_, re.Id = fileService.CopyImage(userId, re.Id, noteUserId)
-			} else {
-				// 怎么可能在这个笔记下paste图片呢?
-				// 正常情况下不会
+	if noteId != "" {
+		userId := c.GetUserId()
+		note := noteService.GetNoteById(noteId)
+		if note.UserId != "" {
+			noteUserId := note.UserId.Hex()
+			if noteUserId != userId {
+				// 是否是有权限协作的
+				if shareService.HasUpdatePerm(noteUserId, userId, noteId) {
+					// 复制图片之, 图片复制给noteUserId
+					_, re.Id = fileService.CopyImage(userId, re.Id, noteUserId)
+				} else {
+					// 怎么可能在这个笔记下paste图片呢?
+					// 正常情况下不会
+				}
 			}
 		}
 	}
@@ -109,7 +111,8 @@ func (c File) uploadImage(from, albumId string) (re info.Re) {
 	if from == "logo" || from == "blogLogo" {
 		fileUrlPath = "public/upload/" + Digest3(userId) + "/" + userId + "/images/logo"
 	} else {
-		fileUrlPath = "files/" + Digest3(userId) + "/" + userId + "/" + Digest2(newGuid) + "/images"
+		// fileUrlPath = "files/" + Digest3(userId) + "/" + userId + "/" + Digest2(newGuid) + "/images"
+		fileUrlPath = "files/" + GetRandomFilePath(userId, newGuid) + "/images"
 	}
 
 	dir := revel.BasePath + "/" + fileUrlPath
@@ -242,7 +245,8 @@ func (c File) CopyHttpImage(src string) revel.Result {
 	// 生成上传路径
 	newGuid := NewGuid()
 	userId := c.GetUserId()
-	fileUrlPath := "files/" + Digest3(userId) + "/" + userId + "/" + Digest2(newGuid) + "/images"
+	// fileUrlPath := "files/" + Digest3(userId) + "/" + userId + "/" + Digest2(newGuid) + "/images"
+	fileUrlPath := "files/" + GetRandomFilePath(userId, newGuid) + "/images"
 	dir := revel.BasePath + "/" + fileUrlPath
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
