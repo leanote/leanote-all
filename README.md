@@ -6,12 +6,9 @@ The repository contains leanote source and dependencies, just for developers.
 
 ## Current version
 
-* leanote-v1.3.1
+* leanote-v1.4
 * revel 0.12
 * [mgo](http://blog.labix.org/2015/01/24/readying-mgo-for-mongodb-3-0) support for mongodb-3.0
-
-## leanote-v1.3.1
-* Note batch operation
 
 ## How to install leanote
 
