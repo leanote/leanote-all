@@ -226,6 +226,10 @@ var Resize = {
 				$t.removeClass('open');//.addClass('close');
 				self.rightColumn.find('.layout-resizer').removeClass('open');
 				$('.preview-container').hide();
+
+				if(MD) {
+					MD.resize();
+				}
 			} else {
 				$t.addClass('open');
 				self.rightColumn.find('.layout-resizer').addClass('open');
@@ -233,8 +237,8 @@ var Resize = {
 				$('.preview-container').show();
 				self.rightColumn.css('left', everLeftWidth).width('auto');
 				
-				if(MD) { 
-					MD.onResize();
+				if(MD) {
+					MD.resize();
 				}
 			}
 		});
@@ -528,8 +532,7 @@ function initEditor() {
 		// content_css 不再需要
 		// content_css : [LEA.sPath + "/css/editor/editor.css"], // .concat(em.getWritingCss()),
 		skin : "custom",
-		// tinymce just support en & zh lang currently
-		language: LEA.locale != 'en' && LEA.locale != 'zh' ? 'en' : LEA.locale,
+		language: LEA.locale, // 语言
 		plugins : [
 				"autolink link leaui_image lists hr", "paste",
 				"searchreplace leanote_nav leanote_code tabfocus",

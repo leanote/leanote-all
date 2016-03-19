@@ -15,6 +15,8 @@ var base = leanoteBase + '/public'; // public base
 var noteDev = leanoteBase + '/app/views/note/note-dev.html';
 var noteProBase = leanoteBase + '/app/views/note';
 
+var messagesPath = leanoteBase + 'messages';
+
 // 合并Js, 这些js都是不怎么修改, 且是依赖
 // 840kb, 非常耗时!!
 gulp.task('concatDepJs', function() {
@@ -205,6 +207,7 @@ gulp.task('i18n', function() {
     ls(leanoteBase + '/app/views');
 
     console.log('parsed');
+    var langs = {}; // zh-cn: 1
 
     // msg.zh
     function getAllMsgs(fname) {
@@ -229,14 +232,25 @@ gulp.task('i18n', function() {
         return msg;
     }
 
+    // 得到所有的语言的后缀
+    // 返回{en-us: 1, }
+    function getAllLangs() {
+        var langs = {};
+        var files = fs.readdirSync(messagesPath);  
+        for(fn in files) {
+            var fname = files[fn]; 
+            if (fname.indexOf('-') > 0) {
+                langs[fname] = 1;
+            }
+        }
+        return langs;
+    }
+
     // msg.zh, msg.js
-    function genI18nJsFile(fromFilename, otherNames, keys) {
+    function genI18nJsFile(targetFilename, lang, fromFilenames, keys) {
         var msgs = {};
-        otherNames.unshift(fromFilename);
-        // console.log(fromFilename);
-        // console.log(otherNames);
-        otherNames.forEach(function (name) {
-            var tmpMsgs = getAllMsgs(leanoteBase + '/messages/' + name);
+        fromFilenames.forEach(function (name) {
+            var tmpMsgs = getAllMsgs(leanoteBase + '/messages/' + lang + '/' + name + '.conf');
             for (var i in tmpMsgs) {
                 msgs[i] = tmpMsgs[i];
             }
@@ -261,22 +275,24 @@ gulp.task('i18n', function() {
             '}';
 
         // 写入到文件中
-        var toFilename = fromFilename + '.js';
+        var toFilename = targetFilename + '.' + lang + '.js';
         fs.writeFile(base + '/js/i18n/' + toFilename, str);
     }
 
-    // 必须要的
-    // keys.push();
+    function genTinymceLang(lang) {
+        var msgs = getAllMsgs(leanoteBase + 'messages/' + lang + '/tinymce_editor.conf');
+        var str = 'tinymce.addI18n("' + lang + '",' + JSON.stringify(msgs) + ');';
+        fs.writeFile(base + '/tinymce/langs/' + lang + '.js', str);
+    }
 
-    genI18nJsFile('blog.zh', [], keys);
-    genI18nJsFile('blog.en', [], keys);
-    genI18nJsFile('blog.fr', [], keys);
-    genI18nJsFile('blog.pt', [], keys);
+    var langs = getAllLangs();
+    for (var lang in langs) {
+        genI18nJsFile('blog', lang, ['blog'], keys);
+        genI18nJsFile('msg', lang, ['msg', 'member', 'markdown', 'album'], keys);
 
-    genI18nJsFile('msg.fr', ['member.fr', 'markdown.fr', 'album.fr'], keys);
-    genI18nJsFile('msg.zh', ['member.zh', 'markdown.zh', 'album.zh'], keys);
-    genI18nJsFile('msg.en', ['member.en', 'markdown.en', 'album.en'], keys);
-    genI18nJsFile('msg.pt', ['member.pt', 'markdown.pt', 'album.pt'], keys);
+        genTinymceLang(lang);
+    }
+    
 });
 
 // 合并album需要的js
