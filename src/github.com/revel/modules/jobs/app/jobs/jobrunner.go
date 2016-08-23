@@ -11,10 +11,11 @@
 package jobs
 
 import (
-	"github.com/revel/revel"
-	"github.com/robfig/cron"
 	"strings"
 	"time"
+
+	"github.com/revel/cron"
+	"github.com/revel/revel"
 )
 
 // Callers can use jobs.Func to wrap a raw func.

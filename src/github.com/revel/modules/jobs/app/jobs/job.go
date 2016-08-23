@@ -1,12 +1,13 @@
 package jobs
 
 import (
-	"github.com/revel/revel"
-	"github.com/robfig/cron"
 	"reflect"
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
+
+	"github.com/revel/cron"
+	"github.com/revel/revel"
 )
 
 type Job struct {

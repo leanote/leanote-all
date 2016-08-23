@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/revel/revel"
 	"github.com/revel/cmd/harness"
+	"github.com/revel/revel"
 	"strconv"
 )
 
@@ -65,7 +65,7 @@ func runApp(args []string) {
 	}
 
 	// Else, just build and run the app.
-		revel.TRACE.Println("Running in live build mode.")
+	revel.TRACE.Println("Running in live build mode.")
 	app, err := harness.Build()
 	if err != nil {
 		errorf("Failed to build app: %s", err)

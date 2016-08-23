@@ -3,9 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/revel/revel"
-	"github.com/revel/cmd/harness"
-	"github.com/revel/modules/testrunner/app/controllers"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +10,10 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	"github.com/revel/cmd/harness"
+	"github.com/revel/modules/testrunner/app/controllers"
+	"github.com/revel/revel"
 )
 
 var cmdTest = &Command{
@@ -117,13 +118,19 @@ You can add it to a run mode configuration with the following line:
 	)
 	for i := 0; ; i++ {
 		if resp, err = http.Get(baseUrl + "/@tests.list"); err == nil {
-			break
+			if resp.StatusCode == http.StatusOK {
+				break
+			}
 		}
 		if i < 3 {
 			time.Sleep(3 * time.Second)
 			continue
 		}
-		errorf("Failed to request test list: %s", err)
+		if err != nil {
+			errorf("Failed to request test list: %s", err)
+		} else {
+			errorf("Failed to request test list: non-200 response")
+		}
 	}
 	defer resp.Body.Close()
 	json.NewDecoder(resp.Body).Decode(&testSuites)

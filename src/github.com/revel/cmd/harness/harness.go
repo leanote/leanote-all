@@ -13,7 +13,6 @@ package harness
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/revel/revel"
 	"go/build"
 	"io"
 	"net"
@@ -22,10 +21,11 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"path"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
+
+	"github.com/revel/revel"
 )
 
 var (
@@ -52,7 +52,7 @@ func renderError(w http.ResponseWriter, r *http.Request, err error) {
 
 // ServeHTTP handles all requests.
 // It checks for changes to app, rebuilds if necessary, and forwards the request.
-func (hp *Harness) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Harness) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Don't rebuild the app for favicon requests.
 	if lastRequestHadError > 0 && r.URL.Path == "/favicon.ico" {
 		return
@@ -71,18 +71,19 @@ func (hp *Harness) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Reverse proxy the request.
 	// (Need special code for websockets, courtesy of bradfitz)
 	if strings.EqualFold(r.Header.Get("Upgrade"), "websocket") {
-		proxyWebsocket(w, r, hp.serverHost)
+		proxyWebsocket(w, r, h.serverHost)
 	} else {
-		hp.proxy.ServeHTTP(w, r)
+		h.proxy.ServeHTTP(w, r)
 	}
 }
 
-// Return a reverse proxy that forwards requests to the given port.
+// NewHarness method returns a reverse proxy that forwards requests
+// to the given port.
 func NewHarness() *Harness {
 	// Get a template loader to render errors.
 	// Prefer the app's views/errors directory, and fall back to the stock error pages.
 	revel.MainTemplateLoader = revel.NewTemplateLoader(
-		[]string{path.Join(revel.RevelPath, "templates")})
+		[]string{filepath.Join(revel.RevelPath, "templates")})
 	revel.MainTemplateLoader.Refresh()
 
 	addr := revel.HttpAddr
@@ -101,12 +102,12 @@ func NewHarness() *Harness {
 		port = getFreePort()
 	}
 
-	serverUrl, _ := url.ParseRequestURI(fmt.Sprintf(scheme+"://%s:%d", addr, port))
+	serverURL, _ := url.ParseRequestURI(fmt.Sprintf(scheme+"://%s:%d", addr, port))
 
 	harness := &Harness{
 		port:       port,
-		serverHost: serverUrl.String()[len(scheme+"://"):],
-		proxy:      httputil.NewSingleHostReverseProxy(serverUrl),
+		serverHost: serverURL.String()[len(scheme+"://"):],
+		proxy:      httputil.NewSingleHostReverseProxy(serverURL),
 	}
 
 	if revel.HttpSsl {
@@ -117,7 +118,7 @@ func NewHarness() *Harness {
 	return harness
 }
 
-// Rebuild the Revel application and run it on the given port.
+// Refresh method rebuilds the Revel application and run it on the given port.
 func (h *Harness) Refresh() (err *revel.Error) {
 	if h.app != nil {
 		h.app.Kill()
@@ -140,10 +141,14 @@ func (h *Harness) Refresh() (err *revel.Error) {
 	return
 }
 
+// WatchDir method returns false to file matches with doNotWatch
+// otheriwse true
 func (h *Harness) WatchDir(info os.FileInfo) bool {
 	return !revel.ContainsString(doNotWatch, info.Name())
 }
 
+// WatchFile method returns true given filename HasSuffix of ".go"
+// otheriwse false
 func (h *Harness) WatchFile(filename string) bool {
 	return strings.HasSuffix(filename, ".go")
 }
@@ -204,7 +209,18 @@ func getFreePort() (port int) {
 // proxyWebsocket copies data between websocket client and server until one side
 // closes the connection.  (ReverseProxy doesn't work with websocket requests.)
 func proxyWebsocket(w http.ResponseWriter, r *http.Request, host string) {
-	d, err := net.Dial("tcp", host)
+	var (
+		d   net.Conn
+		err error
+	)
+	if revel.HttpSsl {
+		// since this proxy isn't used in production,
+		// it's OK to set InsecureSkipVerify to true
+		// no need to add another configuration option.
+		d, err = tls.Dial("tcp", host, &tls.Config{InsecureSkipVerify: true})
+	} else {
+		d, err = net.Dial("tcp", host)
+	}
 	if err != nil {
 		http.Error(w, "Error contacting backend server.", 500)
 		revel.ERROR.Printf("Error dialing websocket backend %s: %v", host, err)

@@ -96,7 +96,7 @@ func ProcessSource(roots []string) (*SourceInfo, *revel.Error) {
 		}
 
 		// Start walking the directory tree.
-		filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		_ = revel.Walk(root, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				log.Println("Error scanning app source:", err)
 				return nil
@@ -433,7 +433,8 @@ func appendAction(fset *token.FileSet, mm methodMap, decl ast.Decl, pkgImportPat
 			var importPath string
 			typeExpr := NewTypeExpr(pkgName, field.Type)
 			if !typeExpr.Valid {
-				return // We didn't understand one of the args.  Ignore this action. (Already logged)
+				log.Printf("Didn't understand argument '%s' of action %s. Ignoring.\n", name, getFuncName(funcDecl))
+				return // We didn't understand one of the args.  Ignore this action.
 			}
 			if typeExpr.PkgName != "" {
 				var ok bool

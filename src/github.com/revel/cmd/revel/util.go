@@ -66,22 +66,10 @@ func mustChmod(filename string, mode os.FileMode) {
 // Additionally, the trailing ".template" is stripped from the file name.
 // Also, dot files and dot directories are skipped.
 func mustCopyDir(destDir, srcDir string, data map[string]interface{}) error {
-	var fullSrcDir string
-	// Handle symlinked directories.
-	f, err := os.Lstat(srcDir)
-	if err == nil && f.Mode()&os.ModeSymlink == os.ModeSymlink {
-		fullSrcDir, err = os.Readlink(srcDir)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		fullSrcDir = srcDir
-	}
-
-	return filepath.Walk(fullSrcDir, func(srcPath string, info os.FileInfo, err error) error {
+	return revel.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
 		// Get the relative path from the source base, and the corresponding path in
 		// the dest directory.
-		relSrcPath := strings.TrimLeft(srcPath[len(fullSrcDir):], string(os.PathSeparator))
+		relSrcPath := strings.TrimLeft(srcPath[len(srcDir):], string(os.PathSeparator))
 		destPath := path.Join(destDir, relSrcPath)
 
 		// Skip dot files and dot directories.
@@ -124,7 +112,7 @@ func mustTarGzDir(destFilename, srcDir string) string {
 	tarWriter := tar.NewWriter(gzipWriter)
 	defer tarWriter.Close()
 
-	filepath.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
+	revel.Walk(srcDir, func(srcPath string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}

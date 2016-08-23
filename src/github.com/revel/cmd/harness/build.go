@@ -63,7 +63,7 @@ func Build(buildFlags ...string) (app *App, compileError *revel.Error) {
 	}
 
 	// Binary path is a combination of $GOBIN/revel.d directory, app's import path and its name.
-	binName := path.Join(pkg.BinDir, "revel.d", revel.ImportPath, path.Base(revel.BasePath))
+	binName := filepath.Join(pkg.BinDir, "revel.d", revel.ImportPath, filepath.Base(revel.BasePath))
 
 	// Change binary path for Windows build
 	goos := runtime.GOOS
@@ -77,9 +77,16 @@ func Build(buildFlags ...string) (app *App, compileError *revel.Error) {
 	gotten := make(map[string]struct{})
 	for {
 		appVersion := getAppVersion()
-		versionLinkerFlags := fmt.Sprintf("-X %s/app.APP_VERSION \"%s\"", revel.ImportPath, appVersion)
+		versionLinkerFlags := fmt.Sprintf("-X %s/app.APP_VERSION=%s", revel.ImportPath, appVersion)
+
+		// TODO remove version check for versionLinkerFlags after Revel becomes Go min version to go1.5
+		goVersion, _ := strconv.ParseFloat(runtime.Version()[2:5], 64)
+		if goVersion < 1.5 {
+			versionLinkerFlags = fmt.Sprintf("-X %s/app.APP_VERSION \"%s\"", revel.ImportPath, appVersion)
+		}
 		flags := []string{
 			"build",
+			"-i",
 			"-ldflags", versionLinkerFlags,
 			"-tags", buildTags,
 			"-o", binName}
@@ -173,12 +180,16 @@ func cleanDir(dir string) {
 	tmpPath := path.Join(revel.AppPath, dir)
 	f, err := os.Open(tmpPath)
 	if err != nil {
-		revel.ERROR.Println("Failed to clean dir:", err)
+		if !os.IsNotExist(err) {
+			revel.ERROR.Println("Failed to clean dir:", err)
+		}
 	} else {
 		defer f.Close()
 		infos, err := f.Readdir(0)
 		if err != nil {
-			revel.ERROR.Println("Failed to clean dir:", err)
+			if !os.IsNotExist(err) {
+				revel.ERROR.Println("Failed to clean dir:", err)
+			}
 		} else {
 			for _, info := range infos {
 				path := path.Join(tmpPath, info.Name())
@@ -197,7 +208,6 @@ func cleanDir(dir string) {
 		}
 	}
 }
-
 
 // genSource renders the given template to produce source code, which it writes
 // to the given directory and file.

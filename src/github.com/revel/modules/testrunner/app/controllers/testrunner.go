@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/revel/revel"
@@ -67,7 +68,24 @@ var (
 
 // Index is an action which renders the full list of available test suites and their tests.
 func (c TestRunner) Index() revel.Result {
+	c.RenderArgs["suiteFound"] = len(testSuites) > 0
 	return c.Render(testSuites)
+}
+
+// Suite method allows user to navigate to individual Test Suite and their tests
+func (c TestRunner) Suite(suite string) revel.Result {
+	var foundTestSuites []TestSuiteDesc
+	for _, testSuite := range testSuites {
+		if strings.EqualFold(testSuite.Name, suite) {
+			foundTestSuites = append(foundTestSuites, testSuite)
+		}
+	}
+
+	c.RenderArgs["testSuites"] = foundTestSuites
+	c.RenderArgs["suiteFound"] = len(foundTestSuites) > 0
+	c.RenderArgs["suiteName"] = suite
+
+	return c.RenderTemplate("TestRunner/Index.html")
 }
 
 // Run runs a single test, given by the argument.
@@ -191,21 +209,40 @@ func describeSuite(testSuite interface{}) TestSuiteDesc {
 
 // errorSummary gets an error and returns its summary in human readable format.
 func errorSummary(err *revel.Error) (message string) {
-	message = fmt.Sprintf("%4sStatus: %s\n%4sIn %s", "", err.Description, "", err.Path)
-
-	// If line of error isn't known return the message as is.
-	if err.Line == 0 {
-		return
+	expected_prefix := "(expected)"
+	actual_prefix := "(actual)"
+	errDesc := err.Description
+	//strip the actual/expected stuff to provide more condensed display.
+	if strings.Index(errDesc, expected_prefix) == 0 {
+		errDesc = errDesc[len(expected_prefix):len(errDesc)]
+	}
+	if strings.LastIndex(errDesc, actual_prefix) > 0 {
+		errDesc = errDesc[0 : len(errDesc)-len(actual_prefix)]
 	}
 
-	// Otherwise, include info about the line number and the relevant
-	// source code lines.
-	message += fmt.Sprintf(" (around line %d): ", err.Line)
-	for _, line := range err.ContextSource() {
-		if line.IsError {
-			message += line.Source
+	errFile := err.Path
+	slashIdx := strings.LastIndex(errFile, "/")
+	if slashIdx > 0 {
+		errFile = errFile[slashIdx+1 : len(errFile)]
+	}
+
+	message = fmt.Sprintf("%s %s#%d", errDesc, errFile, err.Line)
+
+	/*
+		// If line of error isn't known return the message as is.
+		if err.Line == 0 {
+			return
 		}
-	}
+
+		// Otherwise, include info about the line number and the relevant
+		// source code lines.
+		message += fmt.Sprintf(" (around line %d): ", err.Line)
+		for _, line := range err.ContextSource() {
+			if line.IsError {
+				message += line.Source
+			}
+		}
+	*/
 
 	return
 }
@@ -217,10 +254,38 @@ func formatResponse(t testing.TestSuite) map[string]string {
 		return map[string]string{}
 	}
 
+	// Since Go 1.6 http.Request struct contains `Cancel <-chan struct{}` which
+	// results in `json: unsupported type: <-chan struct {}`
+	// So pull out required things for Request and Response
+	req := map[string]interface{}{
+		"Method":        t.Response.Request.Method,
+		"URL":           t.Response.Request.URL,
+		"Proto":         t.Response.Request.Proto,
+		"ContentLength": t.Response.Request.ContentLength,
+		"Header":        t.Response.Request.Header,
+		"Form":          t.Response.Request.Form,
+		"PostForm":      t.Response.Request.PostForm,
+	}
+
+	resp := map[string]interface{}{
+		"Status":           t.Response.Status,
+		"StatusCode":       t.Response.StatusCode,
+		"Proto":            t.Response.Proto,
+		"Header":           t.Response.Header,
+		"ContentLength":    t.Response.ContentLength,
+		"TransferEncoding": t.Response.TransferEncoding,
+	}
+
 	// Beautify the response JSON to make it human readable.
-	resp, err := json.MarshalIndent(t.Response, "", "  ")
+	respBytes, err := json.MarshalIndent(
+		map[string]interface{}{
+			"Response": resp,
+			"Request":  req,
+		},
+		"",
+		"   ")
 	if err != nil {
-		revel.ERROR.Println(err)
+		fmt.Println(err)
 	}
 
 	// Remove extra new line symbols so they do not take too much space on a result page.
@@ -229,9 +294,18 @@ func formatResponse(t testing.TestSuite) map[string]string {
 	body = strings.Replace(body, "\r\n\r\n", "\r\n", -1)
 
 	return map[string]string{
-		"Headers": string(resp),
+		"Headers": string(respBytes),
 		"Body":    strings.TrimSpace(body),
 	}
+}
+
+//sortbySuiteName sorts the testsuites by name.
+type sortBySuiteName []interface{}
+
+func (a sortBySuiteName) Len() int      { return len(a) }
+func (a sortBySuiteName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a sortBySuiteName) Less(i, j int) bool {
+	return reflect.TypeOf(a[i]).Elem().Name() < reflect.TypeOf(a[j]).Elem().Name()
 }
 
 func init() {
@@ -241,6 +315,7 @@ func init() {
 	revel.OnAppStart(func() {
 		// Extracting info about available test suites from revel/testing package.
 		registeredTests = map[string]int{}
+		sort.Sort(sortBySuiteName(testing.TestSuites))
 		for _, testSuite := range testing.TestSuites {
 			testSuites = append(testSuites, describeSuite(testSuite))
 		}

@@ -1,10 +1,11 @@
 package controllers
 
 import (
-	"github.com/revel/revel"
-	"github.com/revel/modules/jobs/app/jobs"
-	"github.com/robfig/cron"
 	"strings"
+
+	"github.com/revel/cron"
+	"github.com/revel/modules/jobs/app/jobs"
+	"github.com/revel/revel"
 )
 
 type Jobs struct {

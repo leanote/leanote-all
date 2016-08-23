@@ -7,16 +7,21 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/revel/revel"
 	"github.com/revel/cmd/harness"
+	"github.com/revel/revel"
 )
 
 var cmdBuild = &Command{
-	UsageLine: "build [import path] [target path]",
+	UsageLine: "build [import path] [target path] [run mode]",
 	Short:     "build a Revel application (e.g. for deployment)",
 	Long: `
 Build the Revel web application named by the given import path.
 This allows it to be deployed and run on a machine that lacks a Go installation.
+
+The run mode is used to select which set of app.conf configuration should
+apply and may be used to determine logic in the application itself.
+
+Run mode defaults to "dev".
 
 WARNING: The target path will be completely deleted, if it already exists!
 
@@ -31,14 +36,18 @@ func init() {
 }
 
 func buildApp(args []string) {
-	if len(args) != 2 {
+	if len(args) < 2 {
 		fmt.Fprintf(os.Stderr, "%s\n%s", cmdBuild.UsageLine, cmdBuild.Long)
 		return
 	}
 
-	appImportPath, destPath := args[0], args[1]
+	appImportPath, destPath, mode := args[0], args[1], "dev"
+	if len(args) >= 3 {
+		mode = args[2]
+	}
+
 	if !revel.Initialized {
-		revel.Init("", appImportPath, "")
+		revel.Init(mode, appImportPath, "")
 	}
 
 	// First, verify that it is either already empty or looks like a previous
@@ -96,6 +105,7 @@ func buildApp(args []string) {
 	tmplData, runShPath := map[string]interface{}{
 		"BinName":    filepath.Base(app.BinaryPath),
 		"ImportPath": appImportPath,
+		"Mode":       mode,
 	}, path.Join(destPath, "run.sh")
 
 	mustRenderTemplate(
