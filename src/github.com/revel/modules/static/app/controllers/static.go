@@ -1,18 +1,24 @@
+// Copyright (c) 2012-2016 The Revel Framework Authors, All rights reserved.
+// Revel Framework source code and usage is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package controllers
 
 import (
-	"github.com/revel/revel"
 	"os"
 	fpath "path/filepath"
 	"strings"
 	"syscall"
+
+	"github.com/revel/revel"
 )
 
+// Static file serving controller
 type Static struct {
 	*revel.Controller
 }
 
-// This method handles requests for files. The supplied prefix may be absolute
+// Serve method handles requests for files. The supplied prefix may be absolute
 // or relative. If the prefix is relative it is assumed to be relative to the
 // application directory. The filepath may either be just a file or an
 // additional filepath to search for the given file. This response may return
@@ -52,7 +58,7 @@ func (c Static) Serve(prefix, filepath string) revel.Result {
 	return serve(c, prefix, filepath)
 }
 
-// This method allows modules to serve binary files. The parameters are the same
+// ServeModule method allows modules to serve binary files. The parameters are the same
 // as Static.Serve with the additional module name pre-pended to the list of
 // arguments.
 func (c Static) ServeModule(moduleName, prefix, filepath string) revel.Result {
@@ -73,7 +79,6 @@ func (c Static) ServeModule(moduleName, prefix, filepath string) revel.Result {
 
 	return serve(c, absPath, filepath)
 }
-
 
 // This method allows static serving of application files in a verified manner.
 func serve(c Static, prefix, filepath string) revel.Result {

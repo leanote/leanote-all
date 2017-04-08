@@ -30,10 +30,12 @@ type Context struct {
 	section string // Check this section first, then fall back to DEFAULT
 }
 
+// NewContext creates a default section and returns config context
 func NewContext() *Context {
 	return &Context{config: NewDefault()}
 }
 
+// LoadContext loads the ini config from gives multiple conf paths
 func LoadContext(confName string, confPaths []string) (*Context, error) {
 	ctx := NewContext()
 	for _, confPath := range confPaths {
@@ -51,18 +53,24 @@ func LoadContext(confName string, confPaths []string) (*Context, error) {
 	return ctx, nil
 }
 
+// Raw returns raw config instance
 func (c *Context) Raw() *Config {
 	return c.config
 }
 
+// SetSection the section scope of ini config
+// For e.g.: dev or prod
 func (c *Context) SetSection(section string) {
 	c.section = section
 }
 
+// SetOption sets the value for the given key
 func (c *Context) SetOption(name, value string) {
 	c.config.AddOption(c.section, name, value)
 }
 
+// Int returns `int` config value and if found returns true
+// otherwise false
 func (c *Context) Int(option string) (result int, found bool) {
 	result, err := c.config.Int(c.section, option)
 	if err == nil {
@@ -76,6 +84,8 @@ func (c *Context) Int(option string) (result int, found bool) {
 	return 0, false
 }
 
+// IntDefault returns `int` config value if found otherwise
+// returns given default int value
 func (c *Context) IntDefault(option string, dfault int) int {
 	if r, found := c.Int(option); found {
 		return r
@@ -83,6 +93,8 @@ func (c *Context) IntDefault(option string, dfault int) int {
 	return dfault
 }
 
+// Bool returns `bool` config value and if found returns true
+// otherwise false
 func (c *Context) Bool(option string) (result, found bool) {
 	result, err := c.config.Bool(c.section, option)
 	if err == nil {
@@ -96,6 +108,8 @@ func (c *Context) Bool(option string) (result, found bool) {
 	return false, false
 }
 
+// BoolDefault returns `bool` config value if found otherwise
+// returns given default bool value
 func (c *Context) BoolDefault(option string, dfault bool) bool {
 	if r, found := c.Bool(option); found {
 		return r
@@ -103,6 +117,8 @@ func (c *Context) BoolDefault(option string, dfault bool) bool {
 	return dfault
 }
 
+// String returns `string` config value and if found returns true
+// otherwise false
 func (c *Context) String(option string) (result string, found bool) {
 	if r, err := c.config.String(c.section, option); err == nil {
 		return stripQuotes(r), true
@@ -110,6 +126,8 @@ func (c *Context) String(option string) (result string, found bool) {
 	return "", false
 }
 
+// StringDefault returns `string` config value if found otherwise
+// returns given default string value
 func (c *Context) StringDefault(option, dfault string) string {
 	if r, found := c.String(option); found {
 		return r
@@ -117,6 +135,8 @@ func (c *Context) StringDefault(option, dfault string) string {
 	return dfault
 }
 
+// HasSection checks if the configuration has the given section.
+// (The default section always exists.)
 func (c *Context) HasSection(section string) bool {
 	return c.config.HasSection(section)
 }

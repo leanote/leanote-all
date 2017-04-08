@@ -1,9 +1,12 @@
+// Copyright (c) 2012-2016 The Revel Framework Authors, All rights reserved.
+// Revel Framework source code and usage is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package main
 
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -27,7 +30,7 @@ WARNING: The target path will be completely deleted, if it already exists!
 
 For example:
 
-    revel build github.com/revel/samples/chat /tmp/chat
+    revel build github.com/revel/examples/chat /tmp/chat
 `,
 }
 
@@ -41,7 +44,7 @@ func buildApp(args []string) {
 		return
 	}
 
-	appImportPath, destPath, mode := args[0], args[1], "dev"
+	appImportPath, destPath, mode := args[0], args[1], DefaultRunMode
 	if len(args) >= 3 {
 		mode = args[2]
 	}
@@ -52,12 +55,17 @@ func buildApp(args []string) {
 
 	// First, verify that it is either already empty or looks like a previous
 	// build (to avoid clobbering anything)
-	if exists(destPath) && !empty(destPath) && !exists(path.Join(destPath, "run.sh")) {
+	if exists(destPath) && !empty(destPath) && !exists(filepath.Join(destPath, "run.sh")) {
 		errorf("Abort: %s exists and does not look like a build directory.", destPath)
 	}
 
-	os.RemoveAll(destPath)
-	os.MkdirAll(destPath, 0777)
+	if err := os.RemoveAll(destPath); err != nil && !os.IsNotExist(err) {
+		revel.ERROR.Fatalln(err)
+	}
+
+	if err := os.MkdirAll(destPath, 0777); err != nil {
+		revel.ERROR.Fatalln(err)
+	}
 
 	app, reverr := harness.Build()
 	panicOnError(reverr, "Failed to build")
@@ -69,14 +77,14 @@ func buildApp(args []string) {
 	// - app
 
 	// Revel and the app are in a directory structure mirroring import path
-	srcPath := path.Join(destPath, "src")
-	destBinaryPath := path.Join(destPath, filepath.Base(app.BinaryPath))
-	tmpRevelPath := path.Join(srcPath, filepath.FromSlash(revel.REVEL_IMPORT_PATH))
+	srcPath := filepath.Join(destPath, "src")
+	destBinaryPath := filepath.Join(destPath, filepath.Base(app.BinaryPath))
+	tmpRevelPath := filepath.Join(srcPath, filepath.FromSlash(revel.RevelImportPath))
 	mustCopyFile(destBinaryPath, app.BinaryPath)
 	mustChmod(destBinaryPath, 0755)
-	mustCopyDir(path.Join(tmpRevelPath, "conf"), path.Join(revel.RevelPath, "conf"), nil)
-	mustCopyDir(path.Join(tmpRevelPath, "templates"), path.Join(revel.RevelPath, "templates"), nil)
-	mustCopyDir(path.Join(srcPath, filepath.FromSlash(appImportPath)), revel.BasePath, nil)
+	_ = mustCopyDir(filepath.Join(tmpRevelPath, "conf"), filepath.Join(revel.RevelPath, "conf"), nil)
+	_ = mustCopyDir(filepath.Join(tmpRevelPath, "templates"), filepath.Join(revel.RevelPath, "templates"), nil)
+	_ = mustCopyDir(filepath.Join(srcPath, filepath.FromSlash(appImportPath)), revel.BasePath, nil)
 
 	// Find all the modules used and copy them over.
 	config := revel.Config.Raw()
@@ -99,14 +107,14 @@ func buildApp(args []string) {
 		}
 	}
 	for importPath, fsPath := range modulePaths {
-		mustCopyDir(path.Join(srcPath, importPath), fsPath, nil)
+		_ = mustCopyDir(filepath.Join(srcPath, importPath), fsPath, nil)
 	}
 
 	tmplData, runShPath := map[string]interface{}{
 		"BinName":    filepath.Base(app.BinaryPath),
 		"ImportPath": appImportPath,
 		"Mode":       mode,
-	}, path.Join(destPath, "run.sh")
+	}, filepath.Join(destPath, "run.sh")
 
 	mustRenderTemplate(
 		runShPath,

@@ -41,7 +41,7 @@ func RefreshToken(c *revel.Controller) {
 //
 // Usage:
 //  1) Add `csrf.CsrfFilter` to the app's filters (it must come after the revel.SessionFilter).
-//  2) Add CSRF fields to a form with the template tag `{{ csrftoken . }}`. The filter adds a function closure to the `RenderArgs` that can pull out the secret and make the token as-needed, caching the value in the request. Ajax support provided through the `X-CSRFToken` header.
+//  2) Add CSRF fields to a form with the template tag `{{ csrftoken . }}`. The filter adds a function closure to the `ViewArgs` that can pull out the secret and make the token as-needed, caching the value in the request. Ajax support provided through the `X-CSRFToken` header.
 func CsrfFilter(c *revel.Controller, fc []revel.Filter) {
 	token, foundToken := c.Session["csrf_token"]
 
@@ -91,9 +91,9 @@ func CsrfFilter(c *revel.Controller, fc []revel.Filter) {
 
 	fc[0](c, fc[1:])
 
-	// Only add token to RenderArgs if the request is: not AJAX, not missing referer header, and is same origin.
+	// Only add token to ViewArgs if the request is: not AJAX, not missing referer header, and is same origin.
 	if c.Request.Header.Get("X-CSRFToken") == "" && isSameOrigin {
-		c.RenderArgs["_csrftoken"] = token
+		c.ViewArgs["_csrftoken"] = token
 	}
 }
 
@@ -111,9 +111,9 @@ func sameOrigin(u1, u2 *url.URL) bool {
 }
 
 func init() {
-	revel.TemplateFuncs["csrftoken"] = func(renderArgs map[string]interface{}) template.HTML {
-		if tokenFunc, ok := renderArgs["_csrftoken"]; !ok {
-			panic("REVEL CSRF: _csrftoken missing from RenderArgs.")
+	revel.TemplateFuncs["csrftoken"] = func(viewArgs map[string]interface{}) template.HTML {
+		if tokenFunc, ok := viewArgs["_csrftoken"]; !ok {
+			panic("REVEL CSRF: _csrftoken missing from ViewArgs.")
 		} else {
 			return template.HTML(tokenFunc.(func() string)())
 		}

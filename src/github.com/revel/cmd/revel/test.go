@@ -1,3 +1,7 @@
+// Copyright (c) 2012-2016 The Revel Framework Authors, All rights reserved.
+// Revel Framework source code and usage is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package main
 
 import (
@@ -7,7 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -24,7 +28,7 @@ Run all tests for the Revel app named by the given import path.
 
 For example, to run the booking sample application's tests:
 
-    revel test github.com/revel/samples/booking dev
+    revel test github.com/revel/examples/booking dev
 
 The run mode is used to select which set of app.conf configuration should
 apply and may be used to determine logic in the application itself.
@@ -52,7 +56,7 @@ func testApp(args []string) {
 		errorf("No import path given.\nRun 'revel help test' for usage.\n")
 	}
 
-	mode := "dev"
+	mode := DefaultRunMode
 	if len(args) >= 2 {
 		mode = args[1]
 	}
@@ -61,25 +65,10 @@ func testApp(args []string) {
 	revel.Init(mode, args[0], "")
 
 	// Ensure that the testrunner is loaded in this mode.
-	testRunnerFound := false
-	for _, module := range revel.Modules {
-		if module.ImportPath == revel.Config.StringDefault("module.testrunner", "github.com/revel/modules/testrunner") {
-			testRunnerFound = true
-			break
-		}
-	}
-	if !testRunnerFound {
-		errorf(`Error: The testrunner module is not running.
-
-You can add it to a run mode configuration with the following line:
-
-	module.testrunner = github.com/revel/modules/testrunner
-
-`)
-	}
+	checkTestRunner()
 
 	// Create a directory to hold the test result files.
-	resultPath := path.Join(revel.BasePath, "test-results")
+	resultPath := filepath.Join(revel.BasePath, "test-results")
 	if err = os.RemoveAll(resultPath); err != nil {
 		errorf("Failed to remove test result directory %s: %s", resultPath, err)
 	}
@@ -88,9 +77,9 @@ You can add it to a run mode configuration with the following line:
 	}
 
 	// Direct all the output into a file in the test-results directory.
-	file, err := os.OpenFile(path.Join(resultPath, "app.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile(filepath.Join(resultPath, "app.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		errorf("Failed to create log file: %s", err)
+		errorf("Failed to create test result log file: %s", err)
 	}
 
 	app, reverr := harness.Build()
@@ -108,109 +97,27 @@ You can add it to a run mode configuration with the following line:
 	defer cmd.Kill()
 	revel.INFO.Printf("Testing %s (%s) in %s mode\n", revel.AppName, revel.ImportPath, mode)
 
-	// Get a list of tests.
-	// Since this is the first request to the server, retry/sleep a couple times
-	// in case it hasn't finished starting up yet.
-	var (
-		testSuites []controllers.TestSuiteDesc
-		resp       *http.Response
-		baseUrl    = fmt.Sprintf("http://127.0.0.1:%d", revel.HttpPort)
-	)
-	for i := 0; ; i++ {
-		if resp, err = http.Get(baseUrl + "/@tests.list"); err == nil {
-			if resp.StatusCode == http.StatusOK {
-				break
-			}
-		}
-		if i < 3 {
-			time.Sleep(3 * time.Second)
-			continue
-		}
-		if err != nil {
-			errorf("Failed to request test list: %s", err)
-		} else {
-			errorf("Failed to request test list: non-200 response")
-		}
-	}
-	defer resp.Body.Close()
-	json.NewDecoder(resp.Body).Decode(&testSuites)
+	// Get a list of tests
+	var baseURL = fmt.Sprintf("http://127.0.0.1:%d", revel.HTTPPort)
+	testSuites, _ := getTestsList(baseURL)
 
 	// If a specific TestSuite[.Method] is specified, only run that suite/test
 	if len(args) == 3 {
 		testSuites = filterTestSuites(testSuites, args[2])
 	}
-	fmt.Printf("\n%d test suite%s to run.\n", len(testSuites), pluralize(len(testSuites), "", "s"))
+	testSuiteCount := len(*testSuites)
+	fmt.Printf("\n%d test suite%s to run.\n", testSuiteCount, pluralize(testSuiteCount, "", "s"))
 	fmt.Println()
 
-	// Load the result template, which we execute for each suite.
-	module, _ := revel.ModuleByName("testrunner")
-	TemplateLoader := revel.NewTemplateLoader([]string{path.Join(module.Path, "app", "views")})
-	if err := TemplateLoader.Refresh(); err != nil {
-		errorf("Failed to compile templates: %s", err)
-	}
-	resultTemplate, err := TemplateLoader.Template("TestRunner/SuiteResult.html")
-	if err != nil {
-		errorf("Failed to load suite result template: %s", err)
-	}
-
 	// Run each suite.
-	var (
-		overallSuccess = true
-		failedResults  []controllers.TestSuiteResult
-	)
-	for _, suite := range testSuites {
-		// Print the name of the suite we're running.
-		name := suite.Name
-		if len(name) > 22 {
-			name = name[:19] + "..."
-		}
-		fmt.Printf("%-22s", name)
-
-		// Run every test.
-		startTime := time.Now()
-		suiteResult := controllers.TestSuiteResult{Name: suite.Name, Passed: true}
-		for _, test := range suite.Tests {
-			testUrl := baseUrl + "/@tests/" + suite.Name + "/" + test.Name
-			resp, err := http.Get(testUrl)
-			if err != nil {
-				errorf("Failed to fetch test result at url %s: %s", testUrl, err)
-			}
-			defer resp.Body.Close()
-
-			var testResult controllers.TestResult
-			json.NewDecoder(resp.Body).Decode(&testResult)
-			if !testResult.Passed {
-				suiteResult.Passed = false
-			}
-			suiteResult.Results = append(suiteResult.Results, testResult)
-		}
-		overallSuccess = overallSuccess && suiteResult.Passed
-
-		// Print result.  (Just PASSED or FAILED, and the time taken)
-		suiteResultStr, suiteAlert := "PASSED", ""
-		if !suiteResult.Passed {
-			suiteResultStr, suiteAlert = "FAILED", "!"
-			failedResults = append(failedResults, suiteResult)
-		}
-		fmt.Printf("%8s%3s%6ds\n", suiteResultStr, suiteAlert, int(time.Since(startTime).Seconds()))
-		// Create the result HTML file.
-		suiteResultFilename := path.Join(resultPath,
-			fmt.Sprintf("%s.%s.html", suite.Name, strings.ToLower(suiteResultStr)))
-		suiteResultFile, err := os.Create(suiteResultFilename)
-		if err != nil {
-			errorf("Failed to create result file %s: %s", suiteResultFilename, err)
-		}
-		if err = resultTemplate.Render(suiteResultFile, suiteResult); err != nil {
-			errorf("Failed to render result template: %s", err)
-		}
-	}
+	failedResults, overallSuccess := runTestSuites(baseURL, resultPath, testSuites)
 
 	fmt.Println()
 	if overallSuccess {
 		writeResultFile(resultPath, "result.passed", "passed")
 		fmt.Println("All Tests Passed.")
 	} else {
-		for _, failedResult := range failedResults {
+		for _, failedResult := range *failedResults {
 			fmt.Printf("Failures:\n")
 			for _, result := range failedResult.Results {
 				if !result.Passed {
@@ -225,8 +132,8 @@ You can add it to a run mode configuration with the following line:
 }
 
 func writeResultFile(resultPath, name, content string) {
-	if err := ioutil.WriteFile(path.Join(resultPath, name), []byte(content), 0666); err != nil {
-		errorf("Failed to write result file %s: %s", path.Join(resultPath, name), err)
+	if err := ioutil.WriteFile(filepath.Join(resultPath, name), []byte(content), 0666); err != nil {
+		errorf("Failed to write result file %s: %s", filepath.Join(resultPath, name), err)
 	}
 }
 
@@ -239,7 +146,7 @@ func pluralize(num int, singular, plural string) string {
 
 // Filters test suites and individual tests to match
 // the parsed command line parameter
-func filterTestSuites(suites []controllers.TestSuiteDesc, suiteArgument string) []controllers.TestSuiteDesc {
+func filterTestSuites(suites *[]controllers.TestSuiteDesc, suiteArgument string) *[]controllers.TestSuiteDesc {
 	var suiteName, testName string
 	argArray := strings.Split(suiteArgument, ".")
 	suiteName = argArray[0]
@@ -249,20 +156,20 @@ func filterTestSuites(suites []controllers.TestSuiteDesc, suiteArgument string) 
 	if len(argArray) == 2 {
 		testName = argArray[1]
 	}
-	for _, suite := range suites {
+	for _, suite := range *suites {
 		if suite.Name != suiteName {
 			continue
 		}
 		if testName == "" {
-			return []controllers.TestSuiteDesc{suite}
+			return &[]controllers.TestSuiteDesc{suite}
 		}
 		// Only run a particular test in a suite
 		for _, test := range suite.Tests {
 			if test.Name != testName {
 				continue
 			}
-			return []controllers.TestSuiteDesc{
-				controllers.TestSuiteDesc{
+			return &[]controllers.TestSuiteDesc{
+				{
 					Name:  suite.Name,
 					Tests: []controllers.TestDesc{test},
 				},
@@ -272,4 +179,126 @@ func filterTestSuites(suites []controllers.TestSuiteDesc, suiteArgument string) 
 	}
 	errorf("Couldn't find test suite %s", suiteName)
 	return nil
+}
+
+func checkTestRunner() {
+	testRunnerFound := false
+	for _, module := range revel.Modules {
+		if module.ImportPath == revel.Config.StringDefault("module.testrunner", "github.com/revel/modules/testrunner") {
+			testRunnerFound = true
+			break
+		}
+	}
+
+	if !testRunnerFound {
+		errorf(`Error: The testrunner module is not running.
+
+You can add it to a run mode configuration with the following line:
+
+	module.testrunner = github.com/revel/modules/testrunner
+
+`)
+	}
+}
+
+// Get a list of tests from server.
+// Since this is the first request to the server, retry/sleep a couple times
+// in case it hasn't finished starting up yet.
+func getTestsList(baseURL string) (*[]controllers.TestSuiteDesc, error) {
+	var (
+		err        error
+		resp       *http.Response
+		testSuites []controllers.TestSuiteDesc
+	)
+	for i := 0; ; i++ {
+		if resp, err = http.Get(baseURL + "/@tests.list"); err == nil {
+			if resp.StatusCode == http.StatusOK {
+				break
+			}
+		}
+		if i < 3 {
+			time.Sleep(3 * time.Second)
+			continue
+		}
+		if err != nil {
+			errorf("Failed to request test list: %s", err)
+		} else {
+			errorf("Failed to request test list: non-200 response")
+		}
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	err = json.NewDecoder(resp.Body).Decode(&testSuites)
+
+	return &testSuites, err
+}
+
+func runTestSuites(baseURL, resultPath string, testSuites *[]controllers.TestSuiteDesc) (*[]controllers.TestSuiteResult, bool) {
+	// Load the result template, which we execute for each suite.
+	module, _ := revel.ModuleByName("testrunner")
+	TemplateLoader := revel.NewTemplateLoader([]string{filepath.Join(module.Path, "app", "views")})
+	if err := TemplateLoader.Refresh(); err != nil {
+		errorf("Failed to compile templates: %s", err)
+	}
+	resultTemplate, err := TemplateLoader.Template("TestRunner/SuiteResult.html")
+	if err != nil {
+		errorf("Failed to load suite result template: %s", err)
+	}
+
+	var (
+		overallSuccess = true
+		failedResults  []controllers.TestSuiteResult
+	)
+	for _, suite := range *testSuites {
+		// Print the name of the suite we're running.
+		name := suite.Name
+		if len(name) > 22 {
+			name = name[:19] + "..."
+		}
+		fmt.Printf("%-22s", name)
+
+		// Run every test.
+		startTime := time.Now()
+		suiteResult := controllers.TestSuiteResult{Name: suite.Name, Passed: true}
+		for _, test := range suite.Tests {
+			testURL := baseURL + "/@tests/" + suite.Name + "/" + test.Name
+			resp, err := http.Get(testURL)
+			if err != nil {
+				errorf("Failed to fetch test result at url %s: %s", testURL, err)
+			}
+			defer func() {
+				_ = resp.Body.Close()
+			}()
+
+			var testResult controllers.TestResult
+			err = json.NewDecoder(resp.Body).Decode(&testResult)
+			if err == nil && !testResult.Passed {
+				suiteResult.Passed = false
+			}
+			suiteResult.Results = append(suiteResult.Results, testResult)
+		}
+		overallSuccess = overallSuccess && suiteResult.Passed
+
+		// Print result.  (Just PASSED or FAILED, and the time taken)
+		suiteResultStr, suiteAlert := "PASSED", ""
+		if !suiteResult.Passed {
+			suiteResultStr, suiteAlert = "FAILED", "!"
+			failedResults = append(failedResults, suiteResult)
+		}
+		fmt.Printf("%8s%3s%6ds\n", suiteResultStr, suiteAlert, int(time.Since(startTime).Seconds()))
+		// Create the result HTML file.
+		suiteResultFilename := filepath.Join(resultPath,
+			fmt.Sprintf("%s.%s.html", suite.Name, strings.ToLower(suiteResultStr)))
+		suiteResultFile, err := os.Create(suiteResultFilename)
+		if err != nil {
+			errorf("Failed to create result file %s: %s", suiteResultFilename, err)
+		}
+		if err = resultTemplate.Render(suiteResultFile, suiteResult); err != nil {
+			errorf("Failed to render result template: %s", err)
+		}
+	}
+
+	return &failedResults, overallSuccess
 }

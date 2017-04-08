@@ -1,10 +1,14 @@
+// Copyright (c) 2012-2016 The Revel Framework Authors, All rights reserved.
+// Revel Framework source code and usage is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package main
 
 import (
 	"fmt"
 	"go/build"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 var cmdClean = &Command{
@@ -15,7 +19,7 @@ Clean the Revel web application named by the given import path.
 
 For example:
 
-    revel clean github.com/revel/samples/chat
+    revel clean github.com/revel/examples/chat
 
 It removes the app/tmp and app/routes directory.
 `,
@@ -38,8 +42,8 @@ func cleanApp(args []string) {
 	}
 
 	purgeDirs := []string{
-		path.Join(appPkg.Dir, "app", "tmp"),
-		path.Join(appPkg.Dir, "app", "routes"),
+		filepath.Join(appPkg.Dir, "app", "tmp"),
+		filepath.Join(appPkg.Dir, "app", "routes"),
 	}
 
 	for _, dir := range purgeDirs {

@@ -19,7 +19,9 @@ func (c Jobs) Status() revel.Result {
 			remoteAddress = proxiedAddress[0]
 		}
 	}
-	if !strings.HasPrefix(remoteAddress, "127.0.0.1") && !strings.HasPrefix(remoteAddress, "::1") {
+	if !strings.HasPrefix(remoteAddress, "127.0.0.1") &&
+		!strings.HasPrefix(remoteAddress, "::1") &&
+		!strings.HasPrefix(remoteAddress, "[::1]") {
 		return c.Forbidden("%s is not local", remoteAddress)
 	}
 	entries := jobs.MainCron.Entries()

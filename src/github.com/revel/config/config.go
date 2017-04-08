@@ -19,16 +19,17 @@ import (
 	"strings"
 )
 
+// config constants
 const (
 	// Default section name.
-	DEFAULT_SECTION = "DEFAULT"
+	DefaultSection = "DEFAULT"
 	// Maximum allowed depth when recursively substituing variable names.
-	_DEPTH_VALUES = 200
+	DepthValues = 200
 
-	DEFAULT_COMMENT       = "# "
-	ALTERNATIVE_COMMENT   = "; "
-	DEFAULT_SEPARATOR     = ":"
-	ALTERNATIVE_SEPARATOR = "="
+	DefaultComment       = "# "
+	AlternativeComment   = "; "
+	DefaultSeparator     = ":"
+	AlternativeSeparator = "="
 )
 
 var (
@@ -58,11 +59,11 @@ type Config struct {
 	separator string
 
 	// Sections order
-	lastIdSection int            // Last section identifier
+	lastIDSection int            // Last section identifier
 	idSection     map[string]int // Section : position
 
 	// The last option identifier used for each section.
-	lastIdOption map[string]int // Section : last identifier
+	lastIDOption map[string]int // Section : last identifier
 
 	// Section -> option : value
 	data map[string]map[string]*tValue
@@ -80,16 +81,16 @@ type tValue struct {
 //
 // == Arguments
 //
-// comment: has to be `DEFAULT_COMMENT` or `ALTERNATIVE_COMMENT`
-// separator: has to be `DEFAULT_SEPARATOR` or `ALTERNATIVE_SEPARATOR`
+// comment: has to be `DefaultComment` or `AlternativeComment`
+// separator: has to be `DefaultSeparator` or `AlternativeSeparator`
 // preSpace: indicate if is inserted a space before of the separator
 // postSpace: indicate if is added a space after of the separator
 func New(comment, separator string, preSpace, postSpace bool) *Config {
-	if comment != DEFAULT_COMMENT && comment != ALTERNATIVE_COMMENT {
+	if comment != DefaultComment && comment != AlternativeComment {
 		panic("comment character not valid")
 	}
 
-	if separator != DEFAULT_SEPARATOR && separator != ALTERNATIVE_SEPARATOR {
+	if separator != DefaultSeparator && separator != AlternativeSeparator {
 		panic("separator character not valid")
 	}
 
@@ -108,17 +109,17 @@ func New(comment, separator string, preSpace, postSpace bool) *Config {
 	c.comment = comment
 	c.separator = separator
 	c.idSection = make(map[string]int)
-	c.lastIdOption = make(map[string]int)
+	c.lastIDOption = make(map[string]int)
 	c.data = make(map[string]map[string]*tValue)
 
-	c.AddSection(DEFAULT_SECTION) // Default section always exists.
+	c.AddSection(DefaultSection) // Default section always exists.
 
 	return c
 }
 
 // NewDefault creates a configuration representation with values by default.
 func NewDefault() *Config {
-	return New(DEFAULT_COMMENT, DEFAULT_SEPARATOR, false, true)
+	return New(DefaultComment, DefaultSeparator, false, true)
 }
 
 // Merge merges the given configuration "source" with this one ("target").

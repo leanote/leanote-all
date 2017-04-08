@@ -3,8 +3,8 @@ package secret
 import (
 	"errors"
 
-	"golang.org/x/crypto/bcrypt"
 	"github.com/revel/modules/auth"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // example implementation of a Revel auth security driver

@@ -118,7 +118,7 @@ func TestInMemory(t *testing.T) {
 	}
 
 	// default section always exists
-	if c.AddSection(DEFAULT_SECTION) {
+	if c.AddSection(DefaultSection) {
 		t.Errorf("AddSection failure: true on default section insert")
 	}
 
@@ -187,13 +187,13 @@ func TestInMemory(t *testing.T) {
 
 	// == Test cycle
 
-	c.AddOption(DEFAULT_SECTION, "opt1", "%(opt2)s")
-	c.AddOption(DEFAULT_SECTION, "opt2", "%(opt1)s")
+	c.AddOption(DefaultSection, "opt1", "%(opt2)s")
+	c.AddOption(DefaultSection, "opt2", "%(opt1)s")
 
-	_, err = c.String(DEFAULT_SECTION, "opt1")
+	_, err = c.String(DefaultSection, "opt1")
 	if err == nil {
 		t.Errorf("String failure: no error for cycle")
-	} else if strings.Index(err.Error(), "cycle") < 0 {
+	} else if !strings.Contains(err.Error(), "cycle") {
 		t.Errorf("String failure: incorrect error for cycle")
 	}
 }
@@ -218,7 +218,7 @@ func TestReadFile(t *testing.T) {
 	buf.WriteString("  # Let me put another comment\n")
 	buf.WriteString("option3= line1\n line2: \n\tline3=v # Comment multiline with := in value\n")
 	buf.WriteString("; Another comment\n")
-	buf.WriteString("[" + DEFAULT_SECTION + "]\n")
+	buf.WriteString("[" + DefaultSection + "]\n")
 	buf.WriteString("variable1=small\n")
 	buf.WriteString("variable2=a_part_of_a_%(variable1)s_test\n")
 	buf.WriteString("[secTION-2]\n")
@@ -241,7 +241,7 @@ func TestReadFile(t *testing.T) {
 	}
 
 	// check number of options 6 of [section-1] plus 2 of [default]
-	opts, err := c.Options("section-1")
+	opts, _ := c.Options("section-1")
 	if len(opts) != 8 {
 		t.Errorf("Options failure: wrong number of options: %d", len(opts))
 	}
@@ -266,8 +266,8 @@ func TestWriteReadFile(t *testing.T) {
 	cw.AddOption("First-Section", "option2", "2")
 
 	cw.AddOption("", "host", "www.example.com")
-	cw.AddOption(DEFAULT_SECTION, "protocol", "https://")
-	cw.AddOption(DEFAULT_SECTION, "base-url", "%(protocol)s%(host)s")
+	cw.AddOption(DefaultSection, "protocol", "https://")
+	cw.AddOption(DefaultSection, "base-url", "%(protocol)s%(host)s")
 
 	cw.AddOption("Another-Section", "useHTTPS", "y")
 	cw.AddOption("Another-Section", "url", "%(base-url)s/some/path")
@@ -298,8 +298,8 @@ func TestSectionOptions(t *testing.T) {
 	cw.AddOption("First-Section", "option2", "2")
 
 	cw.AddOption("", "host", "www.example.com")
-	cw.AddOption(DEFAULT_SECTION, "protocol", "https://")
-	cw.AddOption(DEFAULT_SECTION, "base-url", "%(protocol)s%(host)s")
+	cw.AddOption(DefaultSection, "protocol", "https://")
+	cw.AddOption(DefaultSection, "base-url", "%(protocol)s%(host)s")
 
 	cw.AddOption("Another-Section", "useHTTPS", "y")
 	cw.AddOption("Another-Section", "url", "%(base-url)s/some/path")
@@ -336,7 +336,7 @@ func TestSectionOptions(t *testing.T) {
 		t.Fatalf("SectionOptions reads wrong data: %v", options)
 	}
 
-	options, err = cr.SectionOptions(DEFAULT_SECTION)
+	options, err = cr.SectionOptions(DefaultSection)
 
 	if err != nil {
 		t.Fatalf("SectionOptions failure: %s", err)
@@ -375,18 +375,18 @@ func TestMerge(t *testing.T) {
 	target.Merge(source)
 
 	// Assert whether a regular option was merged from source -> target
-	if result, _ := target.String(DEFAULT_SECTION, "one"); result != "source1" {
+	if result, _ := target.String(DefaultSection, "one"); result != "source1" {
 		t.Errorf("Expected 'one' to be '1' but instead it was '%s'", result)
 	}
 	// Assert that a non-existent option in source was not overwritten
-	if result, _ := target.String(DEFAULT_SECTION, "five"); result != "5" {
+	if result, _ := target.String(DefaultSection, "five"); result != "5" {
 		t.Errorf("Expected 'five' to be '5' but instead it was '%s'", result)
 	}
 	// Assert that a folded option was correctly unfolded
-	if result, _ := target.String(DEFAULT_SECTION, "two_+_three"); result != "source2 + source3" {
+	if result, _ := target.String(DefaultSection, "two_+_three"); result != "source2 + source3" {
 		t.Errorf("Expected 'two_+_three' to be 'source2 + source3' but instead it was '%s'", result)
 	}
-	if result, _ := target.String(DEFAULT_SECTION, "four"); result != "4" {
+	if result, _ := target.String(DefaultSection, "four"); result != "4" {
 		t.Errorf("Expected 'four' to be '4' but instead it was '%s'", result)
 	}
 

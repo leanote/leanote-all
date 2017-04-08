@@ -27,7 +27,7 @@ import (
 func (c *Config) computeVar(beforeValue *string, regx *regexp.Regexp, headsz, tailsz int, withVar func(*string) string) (*string, error) {
 	var i int
 	computedVal := beforeValue
-	for i = 0; i < _DEPTH_VALUES; i++ { // keep a sane depth
+	for i = 0; i < DepthValues; i++ { // keep a sane depth
 
 		vr := regx.FindStringSubmatchIndex(*computedVal)
 		if len(vr) == 0 {
@@ -37,7 +37,7 @@ func (c *Config) computeVar(beforeValue *string, regx *regexp.Regexp, headsz, ta
 		varname := (*computedVal)[vr[headsz]:vr[headsz+1]]
 		varVal := withVar(&varname)
 		if varVal == "" {
-			return &varVal, errors.New(fmt.Sprintf("Option not found: %s", varname))
+			return &varVal, fmt.Errorf("Option not found: %s", varname)
 		}
 
 		// substitute by new value and take off leading '%(' and trailing ')s'
@@ -47,10 +47,10 @@ func (c *Config) computeVar(beforeValue *string, regx *regexp.Regexp, headsz, ta
 		computedVal = &newVal
 	}
 
-	if i == _DEPTH_VALUES {
+	if i == DepthValues {
 		retVal := ""
 		return &retVal,
-			fmt.Errorf("Possible cycle while unfolding variables: max depth of %d reached", _DEPTH_VALUES)
+			fmt.Errorf("Possible cycle while unfolding variables: max depth of %d reached", DepthValues)
 	}
 
 	return computedVal, nil
@@ -111,7 +111,7 @@ func (c *Config) RawString(section string, option string) (value string, err err
 //
 // It returns an error if the option does not exist in the DEFAULT section.
 func (c *Config) RawStringDefault(option string) (value string, err error) {
-	if tValue, ok := c.data[DEFAULT_SECTION][option]; ok {
+	if tValue, ok := c.data[DefaultSection][option]; ok {
 		return tValue.v, nil
 	}
 	return "", OptionError(option)
@@ -120,7 +120,7 @@ func (c *Config) RawStringDefault(option string) (value string, err error) {
 // String gets the string value for the given option in the section.
 // If the value needs to be unfolded (see e.g. %(host)s example in the beginning
 // of this documentation), then String does this unfolding automatically, up to
-// _DEPTH_VALUES number of iterations.
+// `DepthValues` number of iterations.
 //
 // It returns an error if either the section or the option do not exist, or the
 // unfolding cycled.
@@ -134,7 +134,7 @@ func (c *Config) String(section string, option string) (value string, err error)
 	computedVal, err := c.computeVar(&value, varRegExp, 2, 2, func(varName *string) string {
 		lowerVar := *varName
 		// search variable in default section as well as current section
-		varVal, _ := c.data[DEFAULT_SECTION][lowerVar]
+		varVal, _ := c.data[DefaultSection][lowerVar]
 		if _, ok := c.data[section][lowerVar]; ok {
 			varVal = c.data[section][lowerVar]
 		}

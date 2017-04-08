@@ -17,12 +17,12 @@ type Job struct {
 	running sync.Mutex
 }
 
-const UNNAMED = "(unnamed)"
+const UnNamed = "(unnamed)"
 
 func New(job cron.Job) *Job {
 	name := reflect.TypeOf(job).Name()
 	if name == "Func" {
-		name = UNNAMED
+		name = UnNamed
 	}
 	return &Job{
 		Name:  name,

@@ -1,3 +1,7 @@
+// Copyright (c) 2012-2016 The Revel Framework Authors, All rights reserved.
+// Revel Framework source code and usage is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package harness
 
 import (
@@ -12,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/revel/revel"
 )
@@ -44,8 +49,8 @@ func Build(buildFlags ...string) (app *App, compileError *revel.Error) {
 		"ImportPaths":    calcImportAliases(sourceInfo),
 		"TestSuites":     sourceInfo.TestSuites(),
 	}
-	genSource("tmp", "main.go", MAIN, templateArgs)
-	genSource("routes", "routes.go", ROUTES, templateArgs)
+	genSource("tmp", "main.go", RevelMainTemplate, templateArgs)
+	genSource("routes", "routes.go", RevelRoutesTemplate, templateArgs)
 
 	// Read build config.
 	buildTags := revel.Config.StringDefault("build.tags", "")
@@ -77,12 +82,16 @@ func Build(buildFlags ...string) (app *App, compileError *revel.Error) {
 	gotten := make(map[string]struct{})
 	for {
 		appVersion := getAppVersion()
-		versionLinkerFlags := fmt.Sprintf("-X %s/app.APP_VERSION=%s", revel.ImportPath, appVersion)
+
+		buildTime := time.Now().UTC().Format(time.RFC3339)
+		versionLinkerFlags := fmt.Sprintf("-X %s/app.AppVersion=%s -X %s/app.BuildTime=%s",
+			revel.ImportPath, appVersion, revel.ImportPath, buildTime)
 
 		// TODO remove version check for versionLinkerFlags after Revel becomes Go min version to go1.5
 		goVersion, _ := strconv.ParseFloat(runtime.Version()[2:5], 64)
 		if goVersion < 1.5 {
-			versionLinkerFlags = fmt.Sprintf("-X %s/app.APP_VERSION \"%s\"", revel.ImportPath, appVersion)
+			versionLinkerFlags = fmt.Sprintf("-X %s/app.AppVersion \"%s\" -X %s/app.BuildTime \"%s\"",
+				revel.ImportPath, appVersion, revel.ImportPath, buildTime)
 		}
 		flags := []string{
 			"build",
@@ -94,7 +103,8 @@ func Build(buildFlags ...string) (app *App, compileError *revel.Error) {
 		// Add in build flags
 		flags = append(flags, buildFlags...)
 
-		// The main path
+		// This is Go main path
+		// Note: It's not applicable for filepath.* usage
 		flags = append(flags, path.Join(revel.ImportPath, "app", "tmp"))
 
 		buildCmd := exec.Command(goPath, flags...)
@@ -131,6 +141,8 @@ func Build(buildFlags ...string) (app *App, compileError *revel.Error) {
 
 		// Success getting the import, attempt to build again.
 	}
+
+	// TODO remove this unreachable code and document it
 	revel.ERROR.Fatalf("Not reachable")
 	return nil, nil
 }
@@ -149,7 +161,7 @@ func getAppVersion() string {
 	// Check for the git binary
 	if gitPath, err := exec.LookPath("git"); err == nil {
 		// Check for the .git directory
-		gitDir := path.Join(revel.BasePath, ".git")
+		gitDir := filepath.Join(revel.BasePath, ".git")
 		info, err := os.Stat(gitDir)
 		if (err != nil && os.IsNotExist(err)) || !info.IsDir() {
 			return ""
@@ -177,14 +189,17 @@ func cleanSource(dirs ...string) {
 
 func cleanDir(dir string) {
 	revel.INFO.Println("Cleaning dir " + dir)
-	tmpPath := path.Join(revel.AppPath, dir)
+	tmpPath := filepath.Join(revel.AppPath, dir)
 	f, err := os.Open(tmpPath)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			revel.ERROR.Println("Failed to clean dir:", err)
 		}
 	} else {
-		defer f.Close()
+		defer func() {
+			_ = f.Close()
+		}()
+
 		infos, err := f.Readdir(0)
 		if err != nil {
 			if !os.IsNotExist(err) {
@@ -192,7 +207,7 @@ func cleanDir(dir string) {
 			}
 		} else {
 			for _, info := range infos {
-				path := path.Join(tmpPath, info.Name())
+				path := filepath.Join(tmpPath, info.Name())
 				if info.IsDir() {
 					err := os.RemoveAll(path)
 					if err != nil {
@@ -218,20 +233,22 @@ func genSource(dir, filename, templateSource string, args map[string]interface{}
 
 	// Create a fresh dir.
 	cleanSource(dir)
-	tmpPath := path.Join(revel.AppPath, dir)
+	tmpPath := filepath.Join(revel.AppPath, dir)
 	err := os.Mkdir(tmpPath, 0777)
 	if err != nil && !os.IsExist(err) {
 		revel.ERROR.Fatalf("Failed to make '%v' directory: %v", dir, err)
 	}
 
 	// Create the file
-	file, err := os.Create(path.Join(tmpPath, filename))
-	defer file.Close()
+	file, err := os.Create(filepath.Join(tmpPath, filename))
 	if err != nil {
 		revel.ERROR.Fatalf("Failed to create file: %v", err)
 	}
-	_, err = file.WriteString(sourceCode)
-	if err != nil {
+	defer func() {
+		_ = file.Close()
+	}()
+
+	if _, err = file.WriteString(sourceCode); err != nil {
 		revel.ERROR.Fatalf("Failed to write to file: %v", err)
 	}
 }
@@ -350,7 +367,8 @@ func newCompileError(output []byte) *revel.Error {
 	return compileError
 }
 
-const MAIN = `// GENERATED CODE - DO NOT EDIT
+// RevelMainTemplate template for app/tmp/main.go
+const RevelMainTemplate = `// GENERATED CODE - DO NOT EDIT
 package main
 
 import (
@@ -404,7 +422,9 @@ func main() {
 	revel.Run(*port)
 }
 `
-const ROUTES = `// GENERATED CODE - DO NOT EDIT
+
+// RevelRoutesTemplate template for app/conf/routes
+const RevelRoutesTemplate = `// GENERATED CODE - DO NOT EDIT
 package routes
 
 import "github.com/revel/revel"
@@ -420,7 +440,7 @@ func (_ t{{$c.StructName}}) {{.Name}}({{range .Args}}
 	args := make(map[string]string)
 	{{range .Args}}
 	revel.Unbind(args, "{{.Name}}", {{.Name}}){{end}}
-	return revel.MainRouter.Reverse("{{$c.StructName}}.{{.Name}}", args).Url
+	return revel.MainRouter.Reverse("{{$c.StructName}}.{{.Name}}", args).URL
 }
 {{end}}
 {{end}}

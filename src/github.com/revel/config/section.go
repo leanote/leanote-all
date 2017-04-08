@@ -22,7 +22,7 @@ package config
 // It returns true if the new section was inserted, and false if the section
 // already existed.
 func (c *Config) AddSection(section string) bool {
-	// DEFAULT_SECTION
+	// DefaultSection
 	if section == "" {
 		return false
 	}
@@ -34,8 +34,8 @@ func (c *Config) AddSection(section string) bool {
 	c.data[section] = make(map[string]*tValue)
 
 	// Section order
-	c.idSection[section] = c.lastIdSection
-	c.lastIdSection++
+	c.idSection[section] = c.lastIDSection
+	c.lastIDSection++
 
 	return true
 }
@@ -46,16 +46,16 @@ func (c *Config) RemoveSection(section string) bool {
 	_, ok := c.data[section]
 
 	// Default section cannot be removed.
-	if !ok || section == DEFAULT_SECTION {
+	if !ok || section == DefaultSection {
 		return false
 	}
 
-	for o, _ := range c.data[section] {
+	for o := range c.data[section] {
 		delete(c.data[section], o) // *value
 	}
 	delete(c.data, section)
 
-	delete(c.lastIdOption, section)
+	delete(c.lastIDOption, section)
 	delete(c.idSection, section)
 
 	return true
@@ -75,7 +75,7 @@ func (c *Config) Sections() (sections []string) {
 	sections = make([]string, len(c.idSection))
 	pos := 0 // Position in sections
 
-	for i := 0; i < c.lastIdSection; i++ {
+	for i := 0; i < c.lastIDSection; i++ {
 		for section, id := range c.idSection {
 			if id == i {
 				sections[pos] = section

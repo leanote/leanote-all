@@ -27,13 +27,13 @@ func (c *Config) AddOption(section string, option string, value string) bool {
 	c.AddSection(section) // Make sure section exists
 
 	if section == "" {
-		section = DEFAULT_SECTION
+		section = DefaultSection
 	}
 
 	_, ok := c.data[section][option]
 
-	c.data[section][option] = &tValue{c.lastIdOption[section], value}
-	c.lastIdOption[section]++
+	c.data[section][option] = &tValue{c.lastIDOption[section], value}
+	c.lastIDOption[section]++
 
 	return !ok
 }
@@ -59,7 +59,7 @@ func (c *Config) HasOption(section string, option string) bool {
 		return false
 	}
 
-	_, okd := c.data[DEFAULT_SECTION][option]
+	_, okd := c.data[DefaultSection][option]
 	_, oknd := c.data[section][option]
 
 	return okd || oknd
@@ -75,18 +75,18 @@ func (c *Config) Options(section string) (options []string, err error) {
 
 	// Keep a map of option names we've seen to deduplicate.
 	optionMap := make(map[string]struct{},
-		len(c.data[DEFAULT_SECTION])+len(c.data[section]))
-	for s, _ := range c.data[DEFAULT_SECTION] {
+		len(c.data[DefaultSection])+len(c.data[section]))
+	for s := range c.data[DefaultSection] {
 		optionMap[s] = struct{}{}
 	}
-	for s, _ := range c.data[section] {
+	for s := range c.data[section] {
 		optionMap[s] = struct{}{}
 	}
 
 	// Get the keys.
 	i := 0
 	options = make([]string, len(optionMap))
-	for k, _ := range optionMap {
+	for k := range optionMap {
 		options[i] = k
 		i++
 	}
@@ -104,7 +104,7 @@ func (c *Config) SectionOptions(section string) (options []string, err error) {
 
 	options = make([]string, len(c.data[section]))
 	i := 0
-	for s, _ := range c.data[section] {
+	for s := range c.data[section] {
 		options[i] = s
 		i++
 	}

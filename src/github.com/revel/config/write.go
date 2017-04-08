@@ -34,7 +34,7 @@ func (c *Config) WriteFile(fname string, perm os.FileMode, header string) error 
 	if err = c.write(buf, header); err != nil {
 		return err
 	}
-	buf.Flush()
+	_ = buf.Flush()
 
 	return file.Close()
 }
@@ -56,7 +56,7 @@ func (c *Config) write(buf *bufio.Writer, header string) (err error) {
 			if section == orderedSection {
 
 				// Skip default section if empty.
-				if section == DEFAULT_SECTION && len(sectionMap) == 0 {
+				if section == DefaultSection && len(sectionMap) == 0 {
 					continue
 				}
 
@@ -65,7 +65,7 @@ func (c *Config) write(buf *bufio.Writer, header string) (err error) {
 				}
 
 				// Follow the input order in options.
-				for i := 0; i < c.lastIdOption[section]; i++ {
+				for i := 0; i < c.lastIDOption[section]; i++ {
 					for option, tValue := range sectionMap {
 
 						if tValue.position == i {
@@ -82,9 +82,6 @@ func (c *Config) write(buf *bufio.Writer, header string) (err error) {
 		}
 	}
 
-	if _, err = buf.WriteString("\n"); err != nil {
-		return err
-	}
-
-	return nil
+	_, err = buf.WriteString("\n")
+	return err
 }

@@ -200,7 +200,7 @@
                 if (result.Passed) {
                     passCount++;
                 } else {
-                    console.log("fail: result.Name");
+                    console.log("fail:", result.Name);
                     failCount++;
                     var resultLnk = $("a", resultCell);
                     $(resultLnk).text(result.ErrorSummary);

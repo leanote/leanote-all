@@ -1,11 +1,9 @@
 ################################################################################
 # Revel configuration file
-# See:
-#   http://revel.github.io/manual/appconf.html
-#   for more detailed documentation.
+# More info at http://revel.github.io/manual/appconf.html
 ################################################################################
 
-# This sets the `AppName` variable which can be used in your code as
+# Sets the `AppName` variable which can be used in your code as
 #   `if revel.AppName {...}`
 app.name = {{ .AppName }}
 
@@ -35,6 +33,12 @@ http.ssl = false
 #http.sslkey =
 
 
+# Timeout specifies a time limit for request (in seconds) made by a single client.
+# A Timeout of zero means no timeout.
+http.timeout.read = 90
+http.timeout.write = 60
+
+
 # For any cookies set by Revel (Session,Flash,Error) these properties will set
 # the fields of:
 # http://golang.org/pkg/net/http/#Cookie
@@ -47,8 +51,10 @@ cookie.prefix = REVEL
 # server. This makes the cookie less likely to be exposed to cookie theft via
 # eavesdropping.
 #
-# In dev mode, this will default to false, otherwise it will
-# default to true.
+# Defaults to false. If 'http.ssl' is enabled, this will be defaulted to true.
+# This should only be true when Revel is handling SSL connections. If you are
+# using a proxy in front of revel (Nginx, Apache, etc), then this should be left
+# as false.
 # cookie.secure = false
 
 # Limit cookie access to a given domain
@@ -68,11 +74,6 @@ session.expires = 720h
 # package (http://golang.org/pkg/time/#Parse)
 format.date     = 2006-01-02
 format.datetime = 2006-01-02 15:04
-
-# Timeout specifies a time limit for request (in seconds) made by a single client.
-# A Timeout of zero means no timeout.
-timeout.read = 90
-timeout.write = 60
 
 
 # Determines whether the template rendering should use chunked encoding.
@@ -117,7 +118,7 @@ module.static=github.com/revel/modules/static
 mode.dev = true
 
 
-# Pretty print JSON/XML when calling RenderJson/RenderXml
+# Pretty print JSON/XML when calling RenderJSON/RenderXML
 results.pretty = true
 
 

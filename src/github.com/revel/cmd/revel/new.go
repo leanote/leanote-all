@@ -1,3 +1,7 @@
+// Copyright (c) 2012-2016 The Revel Framework Authors, All rights reserved.
+// Revel Framework source code and usage is governed by a MIT style
+// license that can be found in the LICENSE file.
+
 package main
 
 import (
@@ -46,6 +50,7 @@ var (
 
 	// revel related paths
 	revelPkg     *build.Package
+	revelCmdPkg  *build.Package
 	appPath      string
 	appName      string
 	basePath     string
@@ -148,7 +153,7 @@ func setApplicationPath(args []string) {
 		errorf("Abort: Import path %s already exists.\n", importPath)
 	}
 
-	revelPkg, err = build.Import(revel.REVEL_IMPORT_PATH, "", build.FindOnly)
+	revelPkg, err = build.Import(revel.RevelImportPath, "", build.FindOnly)
 	if err != nil {
 		errorf("Abort: Could not find Revel source code: %s\n", err)
 	}
@@ -190,7 +195,12 @@ func setSkeletonPath(args []string) {
 
 	} else {
 		// use the revel default
-		skeletonPath = filepath.Join(revelPkg.Dir, "skeleton")
+		revelCmdPkg, err = build.Import(RevelCmdImportPath, "", build.FindOnly)
+		if err != nil {
+			errorf("Abort: Could not find Revel Cmd source code: %s\n", err)
+		}
+
+		skeletonPath = filepath.Join(revelCmdPkg.Dir, "revel", "skeleton")
 	}
 }
 
@@ -199,7 +209,7 @@ func copyNewAppFiles() {
 	err = os.MkdirAll(appPath, 0777)
 	panicOnError(err, "Failed to create directory "+appPath)
 
-	mustCopyDir(appPath, skeletonPath, map[string]interface{}{
+	_ = mustCopyDir(appPath, skeletonPath, map[string]interface{}{
 		// app.conf
 		"AppName":  appName,
 		"BasePath": basePath,

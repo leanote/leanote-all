@@ -163,7 +163,7 @@ func TestNoTokenInArgsWhenCORs(t *testing.T) {
 
 	testFilters[0](c, testFilters)
 
-	if _, ok := c.RenderArgs["_csrftoken"]; ok {
-		t.Fatal("RenderArgs should not contain token when not same origin")
+	if _, ok := c.ViewArgs["_csrftoken"]; ok {
+		t.Fatal("ViewArgs should not contain token when not same origin")
 	}
 }

@@ -14,12 +14,14 @@
 
 package config
 
+// SectionError type string
 type SectionError string
 
 func (e SectionError) Error() string {
 	return "section not found: " + string(e)
 }
 
+// OptionError type string
 type OptionError string
 
 func (e OptionError) Error() string {
