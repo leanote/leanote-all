@@ -3,7 +3,8 @@
 # More info at http://revel.github.io/manual/appconf.html
 ################################################################################
 
-# Sets the `AppName` variable which can be used in your code as
+# Sets `revel.AppName` for use in-app.
+# Example:
 #   `if revel.AppName {...}`
 app.name = {{ .AppName }}
 
@@ -13,7 +14,7 @@ app.name = {{ .AppName }}
 # into your application
 app.secret = {{ .Secret }}
 
-# Revel running behind proxy like nginx, haproxy, etc
+# Revel running behind proxy like nginx, haproxy, etc.
 app.behind.proxy = false
 
 
@@ -57,10 +58,11 @@ cookie.prefix = REVEL
 # as false.
 # cookie.secure = false
 
-# Limit cookie access to a given domain
+# Limit cookie access to a given domain.
 #cookie.domain =
 
-# Define when your session cookie expires. Possible values:
+# Define when your session cookie expires.
+# Values:
 # "720h"
 #   A time duration (http://golang.org/pkg/time/#ParseDuration) after which
 #   the cookie expires and the session is invalid.
@@ -82,7 +84,7 @@ format.datetime = 2006-01-02 15:04
 results.chunked = false
 
 
-# Prefixes for each log message line
+# Prefixes for each log message line.
 # User can override these prefix values within any section
 # For e.g: [dev], [prod], etc
 log.trace.prefix = "TRACE "
@@ -107,30 +109,57 @@ module.static=github.com/revel/modules/static
 
 
 ################################################################################
+
 # Section: dev
 # This section is evaluated when running Revel in dev mode. Like so:
 #   `revel run path/to/myapp`
 [dev]
-# This sets `DevMode` variable to `true` which can be used in your code as
+
+# This sets `revel.DevMode` for use in-app.
+# Example:
 #   `if revel.DevMode {...}`
 #   or in your templates with
 #   `{{.DevMode}}`
+# Values:
+# "true"
+#   Sets `DevMode` to `true`.
+# "false"
+#   Sets `DevMode` to `false`.
 mode.dev = true
 
 
 # Pretty print JSON/XML when calling RenderJSON/RenderXML
+# Values:
+# "true"
+#   Enables pretty printing.
+# "false"
+#   Disables pretty printing.
 results.pretty = true
 
 
-# Automatically watches your applicaton files and recompiles on-demand
+# Watch your applicaton files for changes and automatically rebuild
+# Values:
+# "true"
+#   Enables auto rebuilding. 
+# "false"
+#   Disables auto rebuilding.
 watch = true
 
 
-# If you set watch.mode = "eager", the server starts to recompile
-# your application every time your application's files change.
-watch.mode = "normal"
+# Define when to rebuild new changes.
+# Values:
+# "normal"
+#   Rebuild when a new request is received and changes have been detected.
+# "eager"
+#   Rebuild as soon as changes are detected.
+watch.mode = normal
 
-# Watch the entire $GOPATH for code changes. Default is false.
+# Watch the entire `$GOPATH` for changes.
+# Values:
+# "true"
+#   Includes `$GOPATH` in watch path.
+# "false"
+#   Excludes `$GOPATH` from watch path. Default value.
 #watch.gopath = true
 
 
@@ -141,20 +170,34 @@ module.testrunner = github.com/revel/modules/testrunner
 
 
 # Where to log the various Revel logs
+# Values:
+# "off"
+#   Disable log output.
+# "stdout"
+#   Log to OS's standard output.
+# "stderr"
+#   Log to Os's standard error output. Default value.
+# "relative/path/to/log"
+#   Log to file.
 log.trace.output = off
 log.info.output  = stderr
 log.warn.output  = stderr
 log.error.output = stderr
 
 
-# Revel log flags. Possible flags defined by the Go `log` package,
-# please refer https://golang.org/pkg/log/#pkg-constants
-# Go log is "Bits or'ed together to control what's printed"
-# Examples:
-#   0  => just log the message, turn off the flags
-#   3  => log.LstdFlags (log.Ldate|log.Ltime)
-#   19 => log.Ldate|log.Ltime|log.Lshortfile
-#   23 => log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile
+# Revel log flags. Possible flags defined by the Go `log` package. Go log is
+# "Bits OR'ed together to control what's printed
+# See:
+#   https://golang.org/pkg/log/#pkg-constants
+# Values:
+# "0"
+#   Just log the message, turn off the flags.
+# "3"
+#   log.LstdFlags (log.Ldate|log.Ltime)
+# "19"
+#   log.Ldate|log.Ltime|log.Lshortfile
+# "23"
+#   log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile
 log.trace.flags = 19
 log.info.flags  = 19
 log.warn.flags  = 19
@@ -169,6 +212,7 @@ log.error.flags = 19
 log.request.output = stderr
 
 
+
 ################################################################################
 # Section: prod
 # This section is evaluated when running Revel in production mode. Like so:
@@ -176,17 +220,14 @@ log.request.output = stderr
 # See:
 #  [dev] section for documentation of the various settings
 [prod]
-mode.dev = false
 
+mode.dev = false
 
 results.pretty = false
 
-
 watch = false
 
-
 module.testrunner =
-
 
 log.trace.output = off
 log.info.output  = off

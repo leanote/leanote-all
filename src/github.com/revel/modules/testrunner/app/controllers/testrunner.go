@@ -121,7 +121,7 @@ func (c TestRunner) Run(suite, test string) revel.Result {
 
 				// Render the error and save to the result structure.
 				var buffer bytes.Buffer
-				tmpl, _ := revel.MainTemplateLoader.Template("TestRunner/FailureDetail.html")
+				tmpl, _ := revel.MainTemplateLoader.TemplateLang("TestRunner/FailureDetail.html", "")
 				_ = tmpl.Render(&buffer, map[string]interface{}{
 					"error":    panicErr,
 					"response": res,

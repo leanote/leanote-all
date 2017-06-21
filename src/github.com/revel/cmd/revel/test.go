@@ -97,8 +97,18 @@ func testApp(args []string) {
 	defer cmd.Kill()
 	revel.INFO.Printf("Testing %s (%s) in %s mode\n", revel.AppName, revel.ImportPath, mode)
 
+	var httpAddr = revel.HTTPAddr
+	if httpAddr == "" {
+		httpAddr = "127.0.0.1"
+	}
+
+	var httpProto = "http"
+	if revel.HTTPSsl {
+		httpProto = "https"
+	}
+
 	// Get a list of tests
-	var baseURL = fmt.Sprintf("http://127.0.0.1:%d", revel.HTTPPort)
+	var baseURL = fmt.Sprintf("%s://%s:%d", httpProto, httpAddr, revel.HTTPPort)
 	testSuites, _ := getTestsList(baseURL)
 
 	// If a specific TestSuite[.Method] is specified, only run that suite/test
