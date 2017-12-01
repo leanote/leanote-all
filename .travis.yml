@@ -1,5 +1,5 @@
 language: go
-go: 1.4
+go: 1.7
 
 services:
   - mongodb # 2.4.12
@@ -19,7 +19,7 @@ script:
   - mongorestore -h localhost -d leanote --dir ./mongodb_backup/leanote_install_data/
   
   # - go test github.com/leanote/leanote/app/tests
-  
+  - echo $GOPATH
   - go build -o leanote github.com/leanote/leanote/app/tmp
   - ./leanote -importPath=github.com/leanote/leanote -runMode=dev -port=9000 &
   - sleep 10s
