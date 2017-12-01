@@ -6,7 +6,7 @@ import (
 	//	"encoding/json"
 	"fmt"
 	"github.com/leanote/leanote/app/info"
-	. "github.com/leanote/leanote/app/lea"
+	// . "github.com/leanote/leanote/app/lea"
 	"github.com/leanote/leanote/app/lea/blog"
 	"gopkg.in/mgo.v2/bson"
 	//	"github.com/leanote/leanote/app/types"
@@ -77,7 +77,7 @@ func (c Blog) e404(themePath string) revel.Result {
 // life.leanote.com
 // lealife.com
 func (c Blog) domain() (ok bool, userBlog info.UserBlog) {
-	host := c.Request.Request.Host // a.cc.com:9000
+	host := c.Request.Host // a.cc.com:9000
 	hostArr := strings.Split(host, ".")
 	if strings.Contains(host, configService.GetDefaultDomain()) {
 		// 有二级域名 a.leanoe.com 3个
@@ -609,7 +609,7 @@ func (c Blog) Post(userIdOrEmail, noteId string) (re revel.Result) {
 	hasDomain, userBlog := c.domain()
 	defer func() {
 		if err := recover(); err != nil {
-			Log(err)
+			// Log(err)
 			re = c.e404(userBlog.ThemePath)
 		}
 	}()

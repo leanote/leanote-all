@@ -129,6 +129,14 @@ GET     /upload/*filepath                       Static.Serve("public/upload")
 *       /member               	MemberIndex.Index
 *       /member/index           MemberIndex.Index
 
+# 不知道为什么, group就是不行 member/blog可以
+*       /member/group/index           MemberGroup.Index
+*       /member/group/addGroup           MemberGroup.AddGroup
+*       /member/group/updateGroupTitle           MemberGroup.UpdateGroupTitle
+*       /member/group/deleteGroup           MemberGroup.DeleteGroup
+*       /member/group/addUser           MemberGroup.AddUser
+*       /member/group/deleteUser           MemberGroup.DeleteUser
+
 # common
 *       /:controller/:action                    :controller.:action
 *       /api/:controller/:action                :controller.:action

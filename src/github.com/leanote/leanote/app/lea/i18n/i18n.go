@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	. "github.com/leanote/leanote/app/lea"
 )
 
 const (
@@ -146,15 +147,15 @@ func loadMessageFile(locale string, path string, info os.FileInfo, osError error
 			// If we have already parsed a message file for this locale, merge both
 			if _, exists := messages[locale]; exists {
 				messages[locale].Merge(config)
-				revel.TRACE.Printf("Successfully merged messages for locale '%s'", locale)
+				Logf("Successfully merged messages for locale '%s'", locale)
 			} else {
 				messages[locale] = config
 			}
 
-			revel.TRACE.Println("Successfully loaded messages from file", info.Name())
+			Logf("Successfully loaded messages from file", info.Name())
 		}
 	} else {
-		revel.TRACE.Printf("Ignoring file %s because it did not have a valid extension", info.Name())
+		Logf("Ignoring file %s because it did not have a valid extension", info.Name())
 	}
 
 	return nil
@@ -178,13 +179,13 @@ func init() {
 
 func I18nFilter(c *revel.Controller, fc []revel.Filter) {
 	if foundCookie, cookieValue := hasLocaleCookie(c.Request); foundCookie {
-		revel.TRACE.Printf("Found locale cookie value: %s", cookieValue)
+		// revel.TRACE.Printf("Found locale cookie value: %s", cookieValue)
 		setCurrentLocaleControllerArguments(c, cookieValue)
 	} else if foundHeader, headerValue := hasAcceptLanguageHeader(c.Request); foundHeader {
-		revel.TRACE.Printf("Found Accept-Language header value: %s", headerValue)
+		// revel.TRACE.Printf("Found Accept-Language header value: %s", headerValue)
 		setCurrentLocaleControllerArguments(c, headerValue)
 	} else {
-		revel.TRACE.Println("Unable to find locale in cookie or header, using empty string")
+		// revel.TRACE.Println("Unable to find locale in cookie or header, using empty string")
 		setCurrentLocaleControllerArguments(c, "")
 	}
 	fc[0](c, fc[1:])
@@ -210,12 +211,12 @@ func hasAcceptLanguageHeader(request *revel.Request) (bool, string) {
 
 // Determine whether the given request has a valid language cookie value.
 func hasLocaleCookie(request *revel.Request) (bool, string) {
-	if request != nil && request.Cookies() != nil {
+	if request != nil {
 		name := revel.Config.StringDefault(localeCookieConfigKey, revel.CookiePrefix+"_LANG")
 		if cookie, error := request.Cookie(name); error == nil {
-			return true, cookie.Value
+			return true, cookie.GetValue()
 		} else {
-			revel.TRACE.Printf("Unable to read locale cookie with name '%s': %s", name, error.Error())
+			// revel.TRACE.Printf("Unable to read locale cookie with name '%s': %s", name, error.Error())
 		}
 	}
 
